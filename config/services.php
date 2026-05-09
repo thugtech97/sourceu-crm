@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'dialpad' => [
+        'api_key' => env('DIALPAD_API_KEY'),
+        'webhook_secret' => env('DIALPAD_WEBHOOK_SECRET'),
+        'base_url' => env('DIALPAD_BASE_URL', 'https://dialpad.com/api/v2'),
+    ],
+
 ];

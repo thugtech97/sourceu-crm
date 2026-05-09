@@ -38,6 +38,17 @@ type DealForm = {
     notes: string;
 };
 
+const stageOptions = [
+    ['new', 'New'],
+    ['meeting_booked', 'Meeting booked'],
+    ['qualified', 'Qualified'],
+    ['proposal', 'Proposal'],
+    ['won', 'Won'],
+    ['warm_email_nurture', 'Warm email nurture'],
+    ['dnc', 'DNC'],
+    ['lost', 'Lost'],
+];
+
 export default function CreateDeal({ accounts, contacts }: Props) {
     const { data, setData, post, processing, errors } = useForm<DealForm>({
         account_id: '',
@@ -143,11 +154,11 @@ function DealFields({
                         value={data.stage}
                         onChange={(event) => setData('stage', event.target.value)}
                     >
-                        <option value="new">New</option>
-                        <option value="qualified">Qualified</option>
-                        <option value="proposal">Proposal</option>
-                        <option value="won">Won</option>
-                        <option value="lost">Lost</option>
+                        {stageOptions.map(([value, label]) => (
+                            <option key={value} value={value}>
+                                {label}
+                            </option>
+                        ))}
                     </select>
                     <InputError message={errors.stage} />
                 </div>

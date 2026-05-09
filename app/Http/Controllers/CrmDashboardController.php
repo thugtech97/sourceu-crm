@@ -17,7 +17,7 @@ class CrmDashboardController extends Controller
 
         $openDeals = Deal::query()
             ->where('owner_id', $ownerId)
-            ->whereNotIn('stage', ['won', 'lost']);
+            ->whereNotIn('stage', [Deal::STAGE_WON, Deal::STAGE_LOST, Deal::STAGE_DNC]);
 
         return Inertia::render('crm/dashboard', [
             'stats' => [
@@ -25,7 +25,7 @@ class CrmDashboardController extends Controller
                 'contacts' => Contact::where('owner_id', $ownerId)->count(),
                 'openDeals' => (clone $openDeals)->count(),
                 'pipelineValue' => (clone $openDeals)->sum('value'),
-                'wonValue' => Deal::where('owner_id', $ownerId)->where('stage', 'won')->sum('value'),
+                'wonValue' => Deal::where('owner_id', $ownerId)->where('stage', Deal::STAGE_WON)->sum('value'),
             ],
             'recentContacts' => Contact::query()
                 ->with('account:id,name')

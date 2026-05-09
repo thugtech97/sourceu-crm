@@ -18,4 +18,8 @@ Route::middleware('auth')->group(function () {
     Route::get('settings/appearance', function () {
         return Inertia::render('settings/appearance');
     })->name('appearance');
+
+    Route::get('settings/integrations', function () {
+        return Inertia::render('settings/integrations');
+    })->name('integrations');
 });

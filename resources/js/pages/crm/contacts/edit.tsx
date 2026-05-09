@@ -1,11 +1,13 @@
 import InputError from '@/components/input-error';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
-import { Head, Link, useForm } from '@inertiajs/react';
-import { FormEvent } from 'react';
+import { type BreadcrumbItem, type SharedData } from '@/types';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { LoaderCircle } from 'lucide-react';
+import { FormEvent, useState } from 'react';
 
 type Account = {
     id: number;
@@ -41,6 +43,8 @@ type ContactForm = {
 };
 
 export default function EditContact({ contact, accounts }: Props) {
+    const { errors: pageErrors, flash } = usePage<SharedData & { errors: Partial<Record<string, string>> }>().props;
+    const [dialing, setDialing] = useState(false);
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Contacts', href: '/contacts' },
         { title: `${contact.first_name} ${contact.last_name}`, href: `/contacts/${contact.id}/edit` },
@@ -61,6 +65,18 @@ export default function EditContact({ contact, accounts }: Props) {
         patch(`/contacts/${contact.id}`);
     }
 
+    function dial() {
+        setDialing(true);
+        router.post(
+            `/contacts/${contact.id}/dialpad/dial`,
+            {},
+            {
+                preserveScroll: true,
+                onFinish: () => setDialing(false),
+            },
+        );
+    }
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Edit contact" />
@@ -69,7 +85,26 @@ export default function EditContact({ contact, accounts }: Props) {
                 <div className="mb-6">
                     <h1 className="text-2xl font-semibold">Edit contact</h1>
                     <p className="text-muted-foreground text-sm">Keep this relationship current.</p>
+                    {contact.phone && (
+                        <Button type="button" variant="outline" className="mt-4" disabled={dialing} onClick={dial}>
+                            {dialing && <LoaderCircle className="size-4 animate-spin" />}
+                            {dialing ? 'Dialing...' : 'Dial with Dialpad'}
+                        </Button>
+                    )}
                 </div>
+
+                {pageErrors.dialpad && (
+                    <Alert variant="destructive" className="mb-6">
+                        <AlertTitle>Dialpad call failed</AlertTitle>
+                        <AlertDescription>{pageErrors.dialpad}</AlertDescription>
+                    </Alert>
+                )}
+                {flash.status && (
+                    <Alert className="mb-6">
+                        <AlertTitle>Dialpad</AlertTitle>
+                        <AlertDescription>{flash.status}</AlertDescription>
+                    </Alert>
+                )}
 
                 <form onSubmit={submit} className="bg-card space-y-6 rounded-lg border p-6 shadow-xs">
                     <ContactFields accounts={accounts} data={data} setData={setData} errors={errors} />

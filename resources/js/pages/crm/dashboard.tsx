@@ -49,7 +49,7 @@ const money = new Intl.NumberFormat('en-US', {
 });
 
 function stageLabel(value: string) {
-    return value.replace('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
+    return value.replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 export default function CrmDashboard({ stats, recentContacts, recentDeals }: Props) {

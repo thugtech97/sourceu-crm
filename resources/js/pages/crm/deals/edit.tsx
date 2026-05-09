@@ -23,6 +23,10 @@ type Deal = {
     contact_id: number | null;
     name: string;
     stage: string;
+    meeting_booked_at: string | null;
+    meeting_outcome: string | null;
+    meeting_outcome_notes: string | null;
+    meeting_outcome_at: string | null;
     value: string;
     expected_close_date: string | null;
     probability: number;
@@ -46,6 +50,28 @@ type DealForm = {
     notes: string;
 };
 
+type MeetingOutcomeForm = {
+    outcome: string;
+    notes: string;
+};
+
+const stageOptions = [
+    ['new', 'New'],
+    ['meeting_booked', 'Meeting booked'],
+    ['qualified', 'Qualified'],
+    ['proposal', 'Proposal'],
+    ['won', 'Won'],
+    ['warm_email_nurture', 'Warm email nurture'],
+    ['dnc', 'DNC'],
+    ['lost', 'Lost'],
+];
+
+const meetingOutcomeOptions = [
+    ['qualified', 'Progress to Qualified'],
+    ['warm_email_nurture', 'Warm email nurture'],
+    ['dnc', 'DNC'],
+];
+
 function dateValue(value: string | null) {
     return value ? value.slice(0, 10) : '';
 }
@@ -65,10 +91,25 @@ export default function EditDeal({ deal, accounts, contacts }: Props) {
         probability: String(deal.probability),
         notes: deal.notes ?? '',
     });
+    const {
+        data: outcomeData,
+        setData: setOutcomeData,
+        patch: patchOutcome,
+        processing: outcomeProcessing,
+        errors: outcomeErrors,
+    } = useForm<MeetingOutcomeForm>({
+        outcome: 'qualified',
+        notes: '',
+    });
 
     function submit(event: FormEvent) {
         event.preventDefault();
         patch(`/deals/${deal.id}`);
+    }
+
+    function submitMeetingOutcome(event: FormEvent) {
+        event.preventDefault();
+        patchOutcome(`/deals/${deal.id}/meeting-outcome`);
     }
 
     return (
@@ -91,6 +132,46 @@ export default function EditDeal({ deal, accounts, contacts }: Props) {
                         </Button>
                     </div>
                 </form>
+
+                {deal.stage === 'meeting_booked' && (
+                    <form onSubmit={submitMeetingOutcome} className="bg-card mt-6 space-y-4 rounded-lg border p-6 shadow-xs">
+                        <div>
+                            <h2 className="font-semibold">Meeting outcome</h2>
+                            <p className="text-muted-foreground text-sm">Close the loop once the meeting has happened.</p>
+                        </div>
+
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <div className="grid gap-2">
+                                <Label htmlFor="outcome">Outcome</Label>
+                                <select
+                                    id="outcome"
+                                    className="border-input bg-background h-10 rounded-md border px-3 text-sm"
+                                    value={outcomeData.outcome}
+                                    onChange={(event) => setOutcomeData('outcome', event.target.value)}
+                                >
+                                    {meetingOutcomeOptions.map(([value, label]) => (
+                                        <option key={value} value={value}>
+                                            {label}
+                                        </option>
+                                    ))}
+                                </select>
+                                <InputError message={outcomeErrors.outcome} />
+                            </div>
+                            <div className="grid gap-2 md:col-span-2">
+                                <Label htmlFor="outcome_notes">Notes</Label>
+                                <textarea
+                                    id="outcome_notes"
+                                    className="border-input bg-background min-h-24 rounded-md border px-3 py-2 text-sm"
+                                    value={outcomeData.notes}
+                                    onChange={(event) => setOutcomeData('notes', event.target.value)}
+                                />
+                                <InputError message={outcomeErrors.notes} />
+                            </div>
+                        </div>
+
+                        <Button disabled={outcomeProcessing}>Log outcome</Button>
+                    </form>
+                )}
             </div>
         </AppLayout>
     );
@@ -159,11 +240,11 @@ function DealFields({
                         value={data.stage}
                         onChange={(event) => setData('stage', event.target.value)}
                     >
-                        <option value="new">New</option>
-                        <option value="qualified">Qualified</option>
-                        <option value="proposal">Proposal</option>
-                        <option value="won">Won</option>
-                        <option value="lost">Lost</option>
+                        {stageOptions.map(([value, label]) => (
+                            <option key={value} value={value}>
+                                {label}
+                            </option>
+                        ))}
                     </select>
                     <InputError message={errors.stage} />
                 </div>

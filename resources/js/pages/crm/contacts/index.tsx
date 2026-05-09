@@ -1,8 +1,10 @@
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
-import { Head, Link, router } from '@inertiajs/react';
+import { type BreadcrumbItem, type SharedData } from '@/types';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { LoaderCircle } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Contacts', href: '/contacts' }];
@@ -35,6 +37,8 @@ type Props = {
 
 export default function ContactsIndex({ contacts, filters }: Props) {
     const [search, setSearch] = useState(filters.search ?? '');
+    const [dialingContactId, setDialingContactId] = useState<number | null>(null);
+    const { errors, flash } = usePage<SharedData & { errors: Partial<Record<string, string>> }>().props;
 
     function submit(event: FormEvent) {
         event.preventDefault();
@@ -45,6 +49,18 @@ export default function ContactsIndex({ contacts, filters }: Props) {
         if (confirm(`Delete ${contact.name}?`)) {
             router.delete(`/contacts/${contact.id}`);
         }
+    }
+
+    function dial(contact: Contact) {
+        setDialingContactId(contact.id);
+        router.post(
+            `/contacts/${contact.id}/dialpad/dial`,
+            {},
+            {
+                preserveScroll: true,
+                onFinish: () => setDialingContactId(null),
+            },
+        );
     }
 
     return (
@@ -68,6 +84,19 @@ export default function ContactsIndex({ contacts, filters }: Props) {
                         Search
                     </Button>
                 </form>
+
+                {errors.dialpad && (
+                    <Alert variant="destructive">
+                        <AlertTitle>Dialpad call failed</AlertTitle>
+                        <AlertDescription>{errors.dialpad}</AlertDescription>
+                    </Alert>
+                )}
+                {flash.status && (
+                    <Alert>
+                        <AlertTitle>Dialpad</AlertTitle>
+                        <AlertDescription>{flash.status}</AlertDescription>
+                    </Alert>
+                )}
 
                 <div className="bg-card overflow-hidden rounded-lg border shadow-xs">
                     <div className="overflow-x-auto">
@@ -104,6 +133,12 @@ export default function ContactsIndex({ contacts, filters }: Props) {
                                         <td className="px-4 py-3 capitalize">{contact.status}</td>
                                         <td className="px-4 py-3">
                                             <div className="flex justify-end gap-2">
+                                                {contact.phone && (
+                                                    <Button variant="outline" size="sm" disabled={dialingContactId === contact.id} onClick={() => dial(contact)}>
+                                                        {dialingContactId === contact.id && <LoaderCircle className="size-4 animate-spin" />}
+                                                        {dialingContactId === contact.id ? 'Dialing...' : 'Dial'}
+                                                    </Button>
+                                                )}
                                                 <Button asChild variant="outline" size="sm">
                                                     <Link href={`/contacts/${contact.id}/edit`}>Edit</Link>
                                                 </Button>

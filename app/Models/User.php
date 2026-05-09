@@ -20,6 +20,9 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'dialpad_user_id',
+        'dialpad_number',
+        'dialpad_connected',
         'password',
     ];
 
@@ -42,6 +45,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'dialpad_connected' => 'boolean',
             'password' => 'hashed',
         ];
     }

@@ -19,6 +19,7 @@ class Contact extends Model
         'last_name',
         'email',
         'phone',
+        'dialpad_contact_id',
         'job_title',
         'status',
         'notes',
@@ -46,6 +47,11 @@ class Contact extends Model
     public function activities(): HasMany
     {
         return $this->hasMany(Activity::class);
+    }
+
+    public function callLogs(): HasMany
+    {
+        return $this->hasMany(CallLog::class);
     }
 
     public function getNameAttribute(): string

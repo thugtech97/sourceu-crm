@@ -24,8 +24,23 @@ export interface NavItem {
 export interface SharedData {
     name: string;
     quote: { message: string; author: string };
+    flash: {
+        status?: string;
+    };
     auth: Auth;
+    notifications: {
+        unread_count: number;
+        items: NotificationItem[];
+    };
     [key: string]: unknown;
+}
+
+export interface NotificationItem {
+    id: string;
+    message: string;
+    url: string | null;
+    read_at: string | null;
+    created_at: string | null;
 }
 
 export interface User {
