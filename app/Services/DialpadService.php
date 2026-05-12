@@ -25,7 +25,7 @@ class DialpadService
             throw new \RuntimeException('This contact has no phone number.');
         }
 
-        $response = $this->post('/calls', [
+        $response = $this->post('/call', [
             'phone_number' => $this->normalisePhone($contact->phone),
             'user_id' => $rep->dialpad_user_id,
             'outbound_caller_id' => $rep->dialpad_number,
