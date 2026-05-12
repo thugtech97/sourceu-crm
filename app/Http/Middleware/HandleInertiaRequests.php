@@ -45,6 +45,7 @@ class HandleInertiaRequests extends Middleware
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             'flash' => [
                 'status' => fn () => $request->session()->get('status'),
+                'dialpad_test' => fn () => $request->session()->get('dialpad_test'),
             ],
             'auth' => [
                 'user' => $user,

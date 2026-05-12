@@ -13,15 +13,15 @@ class DialpadService
 {
     public function initiateCall(Contact $contact, User $rep): CallLog
     {
-        if (!config('services.dialpad.api_key')) {
+        if (! config('services.dialpad.api_key')) {
             throw new \RuntimeException('Dialpad API key is not configured.');
         }
 
-        if (!$rep->dialpad_user_id) {
+        if (! $rep->dialpad_user_id) {
             throw new \RuntimeException('Connect your Dialpad account before placing calls.');
         }
 
-        if (!$contact->phone) {
+        if (! $contact->phone) {
             throw new \RuntimeException('This contact has no phone number.');
         }
 
@@ -35,7 +35,7 @@ class DialpadService
             ]),
         ]);
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             Log::error('Dialpad call initiation failed', [
                 'contact_id' => $contact->id,
                 'status' => $response->status(),
@@ -61,7 +61,7 @@ class DialpadService
 
     public function findUserByEmail(string $email): ?array
     {
-        if (!config('services.dialpad.api_key')) {
+        if (! config('services.dialpad.api_key')) {
             throw new \RuntimeException('Dialpad API key is not configured.');
         }
 
@@ -71,11 +71,81 @@ class DialpadService
             throw new \RuntimeException('Dialpad rejected the API key. Please check DIALPAD_API_KEY and make sure it has users:read scope.');
         }
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             throw new \RuntimeException('Dialpad user lookup failed. Status: '.$response->status());
         }
 
-        return collect($response->json('items') ?? [])->firstWhere('email', $email);
+        $needle = str($email)->lower()->toString();
+
+        return collect($response->json('items') ?? [])
+            ->first(fn (array $user) => collect($user['emails'] ?? [$user['email'] ?? null])
+                ->filter()
+                ->contains(fn (string $candidate) => str($candidate)->lower()->toString() === $needle));
+    }
+
+    public function testUserLookup(string $email): array
+    {
+        if (! config('services.dialpad.api_key')) {
+            throw new \RuntimeException('Dialpad API key is not configured.');
+        }
+
+        $response = $this->get('/users', ['email' => $email]);
+        $items = collect($response->json('items') ?? []);
+        $needle = str($email)->lower()->toString();
+        $matchedUser = $items->first(fn (array $user) => collect($user['emails'] ?? [$user['email'] ?? null])
+            ->filter()
+            ->contains(fn (string $candidate) => str($candidate)->lower()->toString() === $needle));
+
+        return [
+            'email' => $email,
+            'endpoint' => config('services.dialpad.base_url').'/users?'.http_build_query(['email' => $email]),
+            'status' => $response->status(),
+            'successful' => $response->successful(),
+            'item_count' => $items->count(),
+            'matched' => (bool) $matchedUser,
+            'matched_user' => $matchedUser ? $this->summarizeUser($matchedUser) : null,
+            'items' => $items->take(5)->map(fn (array $user) => $this->summarizeUser($user))->values()->all(),
+            'message' => $response->json('message'),
+        ];
+    }
+
+    public function assignConfiguredAccessControlPolicy(array $dialpadUser): void
+    {
+        $policyId = config('services.dialpad.access_control_policy_id');
+
+        if (! $policyId) {
+            return;
+        }
+
+        if (empty($dialpadUser['id'])) {
+            throw new \RuntimeException('Dialpad user lookup did not return a user id.');
+        }
+
+        $payload = [
+            'user_id' => $dialpadUser['id'],
+            'target_type' => config('services.dialpad.access_control_target_type', 'company'),
+        ];
+
+        if (config('services.dialpad.access_control_target_id')) {
+            $payload['target_id'] = config('services.dialpad.access_control_target_id');
+        }
+
+        $response = $this->post("/accesscontrolpolicies/{$policyId}/assign", $payload);
+
+        if ($response->status() === 401) {
+            throw new \RuntimeException('Dialpad rejected the API key. Access control policy assignment requires a company admin API key.');
+        }
+
+        if (! $response->successful()) {
+            Log::error('Dialpad access control policy assignment failed', [
+                'policy_id' => $policyId,
+                'user_id' => $dialpadUser['id'],
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+
+            throw new \RuntimeException('Dialpad policy assignment failed: '.($response->json('message') ?? $response->body()));
+        }
     }
 
     public function registerWebhook(string $url): array
@@ -86,7 +156,7 @@ class DialpadService
             'secret' => config('services.dialpad.webhook_secret'),
         ]);
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             throw new \RuntimeException('Dialpad webhook registration failed: '.$response->body());
         }
 
@@ -123,5 +193,18 @@ class DialpadService
         $phone = preg_replace('/[^\d+]/', '', $phone) ?? $phone;
 
         return str_starts_with($phone, '+') ? $phone : '+'.$phone;
+    }
+
+    private function summarizeUser(array $user): array
+    {
+        return [
+            'id' => $user['id'] ?? null,
+            'name' => $user['name'] ?? null,
+            'email' => $user['email'] ?? null,
+            'emails' => $user['emails'] ?? null,
+            'phone_number' => $user['phone_number'] ?? null,
+            'state' => $user['state'] ?? null,
+            'is_admin' => $user['is_admin'] ?? null,
+        ];
     }
 }

@@ -10,9 +10,7 @@ use Illuminate\Http\Request;
 
 class DialpadController extends Controller
 {
-    public function __construct(private readonly DialpadService $dialpad)
-    {
-    }
+    public function __construct(private readonly DialpadService $dialpad) {}
 
     public function connect(Request $request): RedirectResponse
     {
@@ -26,8 +24,14 @@ class DialpadController extends Controller
             return back()->withErrors(['dialpad' => $e->getMessage()]);
         }
 
-        if (!$dialpadUser) {
+        if (! $dialpadUser) {
             return back()->withErrors(['email' => 'No Dialpad user found for that email.']);
+        }
+
+        try {
+            $this->dialpad->assignConfiguredAccessControlPolicy($dialpadUser);
+        } catch (\RuntimeException $e) {
+            return back()->withErrors(['dialpad' => $e->getMessage()]);
         }
 
         $request->user()->update([
@@ -37,6 +41,25 @@ class DialpadController extends Controller
         ]);
 
         return back()->with('status', 'Dialpad account connected.');
+    }
+
+    public function testLookup(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'email' => ['required', 'email'],
+        ]);
+
+        try {
+            $result = $this->dialpad->testUserLookup($data['email']);
+        } catch (\RuntimeException $e) {
+            $result = [
+                'email' => $data['email'],
+                'successful' => false,
+                'message' => $e->getMessage(),
+            ];
+        }
+
+        return back()->with('dialpad_test', $result);
     }
 
     public function dial(Request $request, Contact $contact): RedirectResponse

@@ -26,6 +26,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('contacts/{contact}/dialpad/dial', [DialpadController::class, 'dial'])->name('contacts.dialpad.dial');
     Route::resource('contacts', ContactController::class)->except(['show']);
     Route::post('dialpad/connect', [DialpadController::class, 'connect'])->name('dialpad.connect');
+    Route::post('dialpad/test-lookup', [DialpadController::class, 'testLookup'])->name('dialpad.test-lookup');
     Route::patch('deals/{deal}/meeting-outcome', [DealController::class, 'logMeetingOutcome'])->name('deals.meeting-outcome');
     Route::resource('deals', DealController::class)->except(['show']);
     Route::patch('notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
