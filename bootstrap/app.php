@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->validateCsrfTokens(except: [
             'webhooks/dialpad',
+            'webhooks/zapier/leads',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

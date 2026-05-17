@@ -1,3 +1,4 @@
+import FlashAlert from '@/components/flash-alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/app-layout';
@@ -68,6 +69,8 @@ export default function AccountsIndex({ accounts, filters }: Props) {
                         Search
                     </Button>
                 </form>
+
+                <FlashAlert />
 
                 <div className="bg-card overflow-hidden rounded-lg border shadow-xs">
                     <div className="overflow-x-auto">

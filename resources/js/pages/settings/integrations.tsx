@@ -1,3 +1,4 @@
+import FlashAlert from '@/components/flash-alert';
 import InputError from '@/components/input-error';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -34,6 +35,7 @@ type DialpadTestResult = {
 };
 
 const dialpadLogoUrl = 'https://us-east.dx.dialpad.com/kpd-static/providers/1565530/webchat/1eed116a4ebc4c7697f62ef6071bc462/images/fab-icon.png';
+const dialpadActionsDisabled = true;
 
 export default function Integrations() {
     const { auth, flash, errors: pageErrors } = usePage<
@@ -84,17 +86,12 @@ export default function Integrations() {
                             <AlertDescription>{pageErrors.email ?? pageErrors.dialpad}</AlertDescription>
                         </Alert>
                     )}
-                    {flash.status && (
-                        <Alert>
-                            <AlertTitle>Dialpad</AlertTitle>
-                            <AlertDescription>{flash.status}</AlertDescription>
-                        </Alert>
-                    )}
+                    <FlashAlert />
 
                     <div className="rounded-lg border p-4">
                         <div className="mb-4 text-sm">
                             <div className="font-medium">{auth.user.dialpad_connected ? 'Connected' : 'Not connected'}</div>
-                            {auth.user.dialpad_number && <div className="text-muted-foreground">Number: {String(auth.user.dialpad_number)}</div>}
+                            {Boolean(auth.user.dialpad_number) && <div className="text-muted-foreground">Number: {String(auth.user.dialpad_number)}</div>}
                         </div>
 
                         <form onSubmit={submit} className="space-y-4">
@@ -105,11 +102,11 @@ export default function Integrations() {
                             </div>
 
                             <div className="flex flex-wrap gap-2">
-                                <Button disabled={processing}>
+                                <Button disabled={dialpadActionsDisabled || processing}>
                                     {processing && <LoaderCircle className="size-4 animate-spin" />}
                                     {processing ? 'Connecting...' : 'Connect Dialpad'}
                                 </Button>
-                                <Button type="button" variant="outline" disabled={testing || processing} onClick={testLookup}>
+                                <Button type="button" variant="outline" disabled={dialpadActionsDisabled || testing || processing} onClick={testLookup}>
                                     {testing ? <LoaderCircle className="size-4 animate-spin" /> : <SearchCheck className="size-4" />}
                                     {testing ? 'Testing...' : 'Test Lookup'}
                                 </Button>

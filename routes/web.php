@@ -7,6 +7,7 @@ use App\Http\Controllers\DealController;
 use App\Http\Controllers\DialpadController;
 use App\Http\Controllers\DialpadWebhookController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ZapierLeadWebhookController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -15,10 +16,11 @@ Route::get('/', function () {
 })->name('home');
 
 Route::post('webhooks/dialpad', DialpadWebhookController::class)->name('webhooks.dialpad');
+Route::post('webhooks/zapier/leads', ZapierLeadWebhookController::class)->name('webhooks.zapier.leads');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
+        return redirect()->route('crm.dashboard');
     })->name('dashboard');
 
     Route::get('crm', CrmDashboardController::class)->name('crm.dashboard');

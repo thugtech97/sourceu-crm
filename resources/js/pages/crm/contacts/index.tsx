@@ -1,3 +1,4 @@
+import FlashAlert from '@/components/flash-alert';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +9,7 @@ import { LoaderCircle } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Contacts', href: '/contacts' }];
+const dialpadActionsDisabled = true;
 
 type Contact = {
     id: number;
@@ -38,7 +40,7 @@ type Props = {
 export default function ContactsIndex({ contacts, filters }: Props) {
     const [search, setSearch] = useState(filters.search ?? '');
     const [dialingContactId, setDialingContactId] = useState<number | null>(null);
-    const { errors, flash } = usePage<SharedData & { errors: Partial<Record<string, string>> }>().props;
+    const { errors } = usePage<SharedData & { errors: Partial<Record<string, string>> }>().props;
 
     function submit(event: FormEvent) {
         event.preventDefault();
@@ -85,16 +87,11 @@ export default function ContactsIndex({ contacts, filters }: Props) {
                     </Button>
                 </form>
 
+                <FlashAlert />
                 {errors.dialpad && (
                     <Alert variant="destructive">
                         <AlertTitle>Dialpad call failed</AlertTitle>
                         <AlertDescription>{errors.dialpad}</AlertDescription>
-                    </Alert>
-                )}
-                {flash.status && (
-                    <Alert>
-                        <AlertTitle>Dialpad</AlertTitle>
-                        <AlertDescription>{flash.status}</AlertDescription>
                     </Alert>
                 )}
 
@@ -134,7 +131,12 @@ export default function ContactsIndex({ contacts, filters }: Props) {
                                         <td className="px-4 py-3">
                                             <div className="flex justify-end gap-2">
                                                 {contact.phone && (
-                                                    <Button variant="outline" size="sm" disabled={dialingContactId === contact.id} onClick={() => dial(contact)}>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        disabled={dialpadActionsDisabled || dialingContactId === contact.id}
+                                                        onClick={() => dial(contact)}
+                                                    >
                                                         {dialingContactId === contact.id && <LoaderCircle className="size-4 animate-spin" />}
                                                         {dialingContactId === contact.id ? 'Dialing...' : 'Dial'}
                                                     </Button>

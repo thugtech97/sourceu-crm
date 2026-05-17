@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Account;
+use App\Models\CallLog;
 use App\Models\Contact;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -62,6 +63,11 @@ class ContactController extends Controller
         return Inertia::render('crm/contacts/edit', [
             'contact' => $contact->load('account:id,name'),
             'accounts' => $this->accountOptions($request),
+            'callLogs' => CallLog::query()
+                ->where('contact_id', $contact->id)
+                ->latest('started_at')
+                ->limit(20)
+                ->get(['id', 'direction', 'status', 'duration_seconds', 'recording_url', 'transcript_text', 'started_at']),
         ]);
     }
 

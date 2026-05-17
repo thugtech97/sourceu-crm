@@ -9,13 +9,8 @@ import AppLogo from './app-logo';
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
-        url: '/dashboard',
-        icon: LayoutGrid,
-    },
-    {
-        title: 'CRM',
         url: '/crm',
-        icon: Handshake,
+        icon: LayoutGrid,
     },
     {
         title: 'Contacts',

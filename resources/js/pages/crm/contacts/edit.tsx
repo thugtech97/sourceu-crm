@@ -1,3 +1,4 @@
+import FlashAlert from '@/components/flash-alert';
 import InputError from '@/components/input-error';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -6,8 +7,10 @@ import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { LoaderCircle } from 'lucide-react';
+import { LoaderCircle, Phone, PhoneIncoming, PhoneMissed, PhoneOutgoing } from 'lucide-react';
 import { FormEvent, useState } from 'react';
+
+const dialpadActionsDisabled = true;
 
 type Account = {
     id: number;
@@ -26,9 +29,20 @@ type Contact = {
     notes: string | null;
 };
 
+type CallLog = {
+    id: number;
+    direction: string;
+    status: string;
+    duration_seconds: number | null;
+    recording_url: string | null;
+    transcript_text: string | null;
+    started_at: string | null;
+};
+
 type Props = {
     contact: Contact;
     accounts: Account[];
+    callLogs: CallLog[];
 };
 
 type ContactForm = {
@@ -42,9 +56,34 @@ type ContactForm = {
     notes: string;
 };
 
-export default function EditContact({ contact, accounts }: Props) {
-    const { errors: pageErrors, flash } = usePage<SharedData & { errors: Partial<Record<string, string>> }>().props;
+function formatDuration(seconds: number | null): string {
+    if (!seconds) return '—';
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return m > 0 ? `${m}m ${s}s` : `${s}s`;
+}
+
+function formatDate(dateStr: string | null): string {
+    if (!dateStr) return '—';
+    return new Date(dateStr).toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+    });
+}
+
+function CallStatusIcon({ direction, status }: { direction: string; status: string }) {
+    if (status === 'missed') return <PhoneMissed className="size-4 text-red-500" />;
+    if (direction === 'inbound') return <PhoneIncoming className="size-4 text-green-500" />;
+    return <PhoneOutgoing className="size-4 text-blue-500" />;
+}
+
+export default function EditContact({ contact, accounts, callLogs }: Props) {
+    const { errors: pageErrors } = usePage<SharedData & { errors: Partial<Record<string, string>> }>().props;
     const [dialing, setDialing] = useState(false);
+    const [expandedLog, setExpandedLog] = useState<number | null>(null);
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Contacts', href: '/contacts' },
         { title: `${contact.first_name} ${contact.last_name}`, href: `/contacts/${contact.id}/edit` },
@@ -81,28 +120,24 @@ export default function EditContact({ contact, accounts }: Props) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Edit contact" />
 
-            <div className="max-w-3xl p-4">
-                <div className="mb-6">
+            <div className="max-w-3xl space-y-6 p-4">
+                <div>
                     <h1 className="text-2xl font-semibold">Edit contact</h1>
                     <p className="text-muted-foreground text-sm">Keep this relationship current.</p>
                     {contact.phone && (
-                        <Button type="button" variant="outline" className="mt-4" disabled={dialing} onClick={dial}>
+                        <Button type="button" variant="outline" className="mt-4" disabled={dialpadActionsDisabled || dialing} onClick={dial}>
                             {dialing && <LoaderCircle className="size-4 animate-spin" />}
+                            <Phone className="size-4" />
                             {dialing ? 'Dialing...' : 'Dial with Dialpad'}
                         </Button>
                     )}
                 </div>
 
+                <FlashAlert />
                 {pageErrors.dialpad && (
-                    <Alert variant="destructive" className="mb-6">
+                    <Alert variant="destructive">
                         <AlertTitle>Dialpad call failed</AlertTitle>
                         <AlertDescription>{pageErrors.dialpad}</AlertDescription>
-                    </Alert>
-                )}
-                {flash.status && (
-                    <Alert className="mb-6">
-                        <AlertTitle>Dialpad</AlertTitle>
-                        <AlertDescription>{flash.status}</AlertDescription>
                     </Alert>
                 )}
 
@@ -116,6 +151,69 @@ export default function EditContact({ contact, accounts }: Props) {
                         </Button>
                     </div>
                 </form>
+
+                {/* Call history */}
+                <section className="bg-card rounded-lg border shadow-xs">
+                    <div className="border-b p-4">
+                        <h2 className="font-semibold">Call history</h2>
+                        <p className="text-muted-foreground text-xs">{callLogs.length === 0 ? 'No calls logged yet.' : `${callLogs.length} call${callLogs.length === 1 ? '' : 's'} on record`}</p>
+                    </div>
+                    {callLogs.length === 0 ? (
+                        <p className="text-muted-foreground p-4 text-sm">
+                            Calls made via Dialpad will appear here automatically.
+                        </p>
+                    ) : (
+                        <div className="divide-y">
+                            {callLogs.map((log) => (
+                                <div key={log.id} className="p-4">
+                                    <div className="flex items-center justify-between gap-4">
+                                        <div className="flex items-center gap-3">
+                                            <CallStatusIcon direction={log.direction} status={log.status} />
+                                            <div>
+                                                <p className="text-sm font-medium capitalize">
+                                                    {log.direction} · {log.status}
+                                                </p>
+                                                <p className="text-muted-foreground text-xs">{formatDate(log.started_at)}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-muted-foreground text-sm">{formatDuration(log.duration_seconds)}</span>
+                                            {(log.recording_url || log.transcript_text) && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => setExpandedLog(expandedLog === log.id ? null : log.id)}
+                                                >
+                                                    {expandedLog === log.id ? 'Hide' : 'Details'}
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </div>
+                                    {expandedLog === log.id && (
+                                        <div className="mt-3 space-y-2">
+                                            {log.recording_url && (
+                                                <a
+                                                    href={log.recording_url}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="text-primary text-sm underline"
+                                                >
+                                                    Listen to recording
+                                                </a>
+                                            )}
+                                            {log.transcript_text && (
+                                                <div className="bg-muted rounded-md p-3">
+                                                    <p className="text-muted-foreground mb-1 text-xs font-medium uppercase tracking-wide">Transcript</p>
+                                                    <p className="text-sm whitespace-pre-wrap">{log.transcript_text}</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </section>
             </div>
         </AppLayout>
     );

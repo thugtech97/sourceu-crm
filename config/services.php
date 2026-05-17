@@ -44,4 +44,9 @@ return [
         'access_control_target_id' => env('DIALPAD_ACCESS_CONTROL_TARGET_ID'),
     ],
 
+    'zapier' => [
+        'lead_webhook_secret' => env('ZAPIER_LEAD_WEBHOOK_SECRET'),
+        'lead_owner_email' => env('ZAPIER_LEAD_OWNER_EMAIL'),
+    ],
+
 ];
