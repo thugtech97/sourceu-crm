@@ -6,6 +6,7 @@ use App\Http\Controllers\CrmDashboardController;
 use App\Http\Controllers\DealController;
 use App\Http\Controllers\DialpadController;
 use App\Http\Controllers\DialpadWebhookController;
+use App\Http\Controllers\DncListController;
 use App\Http\Controllers\LeadPoolController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ZapierLeadWebhookController;
@@ -36,6 +37,10 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('deals', DealController::class)->except(['show']);
     Route::patch('notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::patch('notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
+
+    Route::get('dnc', [DncListController::class, 'index'])->name('dnc.index');
+    Route::post('dnc', [DncListController::class, 'store'])->name('dnc.store');
+    Route::delete('dnc/{dnc}', [DncListController::class, 'destroy'])->name('dnc.destroy');
 
     Route::get('leads/pool', [LeadPoolController::class, 'index'])->name('leads.pool.index');
     Route::post('leads/pool/{contact}/claim', [LeadPoolController::class, 'claim'])->name('leads.pool.claim');
