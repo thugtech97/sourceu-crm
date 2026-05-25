@@ -3,7 +3,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { Building2, Handshake, LayoutGrid, Users } from 'lucide-react';
+import { Building2, Handshake, Kanban, LayoutGrid, PhoneIncoming, Users } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -11,6 +11,11 @@ const mainNavItems: NavItem[] = [
         title: 'Dashboard',
         url: '/crm',
         icon: LayoutGrid,
+    },
+    {
+        title: 'Lead Pool',
+        url: '/leads/pool',
+        icon: PhoneIncoming,
     },
     {
         title: 'Contacts',
@@ -26,6 +31,11 @@ const mainNavItems: NavItem[] = [
         title: 'Deals',
         url: '/deals',
         icon: Handshake,
+    },
+    {
+        title: 'Pipeline',
+        url: '/deals/kanban',
+        icon: Kanban,
     },
 ];
 

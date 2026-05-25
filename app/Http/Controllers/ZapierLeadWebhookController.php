@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Activity;
 use App\Models\Contact;
+use App\Models\DncList;
 use App\Models\User;
+use App\Services\LeadRoutingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -12,7 +14,7 @@ use Illuminate\Support\Str;
 
 class ZapierLeadWebhookController extends Controller
 {
-    public function __invoke(Request $request): JsonResponse
+    public function __invoke(Request $request, LeadRoutingService $router): JsonResponse
     {
         $secret = config('services.zapier.lead_webhook_secret');
 
@@ -35,6 +37,13 @@ class ZapierLeadWebhookController extends Controller
         $payload = Arr::except($request->all(), ['secret']);
         $lead = $this->normaliseLead($payload);
 
+        // Block DNC contacts at the gate — never enter the pool.
+        if (DncList::blocks($lead['phone'], $lead['email'])) {
+            return response()->json(['message' => 'Lead is on the DNC list and was rejected.', 'dnc' => true]);
+        }
+
+        $sourceType = $this->resolveSourceType($lead, $payload);
+
         $contact = $this->contactFor($owner, $lead);
         $contact->fill([
             'owner_id' => $owner->id,
@@ -48,6 +57,9 @@ class ZapierLeadWebhookController extends Controller
         ]);
         $contact->save();
 
+        // Route contact into the appropriate pool.
+        $router->ingest($contact, $sourceType);
+
         Activity::create([
             'owner_id' => $owner->id,
             'contact_id' => $contact->id,
@@ -60,6 +72,7 @@ class ZapierLeadWebhookController extends Controller
         return response()->json([
             'message' => 'Lead saved.',
             'contact_id' => $contact->id,
+            'source_type' => $sourceType,
         ]);
     }
 
@@ -72,6 +85,24 @@ class ZapierLeadWebhookController extends Controller
         }
 
         return User::query()->orderBy('id')->first();
+    }
+
+    /**
+     * Determine source type from the payload. Pass `source_type=cold` in the
+     * webhook payload to route to the cold calling team; defaults to inbound.
+     *
+     * @param  array<string, string|null>  $lead
+     * @param  array<string, mixed>  $payload
+     */
+    private function resolveSourceType(array $lead, array $payload): string
+    {
+        $raw = $this->value($payload, ['source_type', 'lead_type', 'type']);
+
+        if ($raw && Str::lower($raw) === 'cold') {
+            return Contact::SOURCE_COLD;
+        }
+
+        return Contact::SOURCE_INBOUND;
     }
 
     /**
@@ -110,7 +141,7 @@ class ZapierLeadWebhookController extends Controller
                 ->firstOrNew();
         }
 
-        return new Contact();
+        return new Contact;
     }
 
     /**

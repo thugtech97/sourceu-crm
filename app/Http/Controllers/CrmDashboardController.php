@@ -27,6 +27,13 @@ class CrmDashboardController extends Controller
                 'openDeals' => (clone $openDeals)->count(),
                 'pipelineValue' => (clone $openDeals)->sum('value'),
                 'wonValue' => Deal::where('owner_id', $ownerId)->where('stage', Deal::STAGE_WON)->sum('value'),
+                'poolLeads' => Contact::where('owner_id', $ownerId)
+                    ->whereNull('pool_assigned_to')
+                    ->whereIn('disposition', ['new_lead', 'recycled'])
+                    ->count(),
+                'warmEmail' => Contact::where('owner_id', $ownerId)
+                    ->where('disposition', 'warm_email')
+                    ->count(),
             ],
             'dealsByStage' => (clone $openDeals)
                 ->selectRaw('stage, count(*) as count, sum(value) as total')

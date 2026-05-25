@@ -29,6 +29,7 @@ type ContactForm = {
     phone: string;
     job_title: string;
     status: string;
+    source_type: string;
     notes: string;
 };
 
@@ -41,6 +42,7 @@ export default function CreateContact({ accounts }: Props) {
         phone: '',
         job_title: '',
         status: 'lead',
+        source_type: 'inbound',
         notes: '',
     });
 
@@ -128,6 +130,21 @@ function ContactFields({
                     </select>
                     <InputError message={errors.status} />
                 </div>
+                {data.status === 'lead' && (
+                    <div className="grid gap-2">
+                        <Label htmlFor="source_type">Lead pool</Label>
+                        <select
+                            id="source_type"
+                            className="border-input bg-background h-10 rounded-md border px-3 text-sm"
+                            value={data.source_type}
+                            onChange={(event) => setData('source_type', event.target.value)}
+                        >
+                            <option value="inbound">Inbound Sales</option>
+                            <option value="cold">Cold Calling</option>
+                        </select>
+                        <InputError message={errors.source_type} />
+                    </div>
+                )}
                 <div className="grid gap-2 md:col-span-2">
                     <Label htmlFor="account_id">Account</Label>
                     <select

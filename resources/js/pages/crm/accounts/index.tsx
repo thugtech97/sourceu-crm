@@ -1,3 +1,4 @@
+import ConfirmDialog from '@/components/confirm-dialog';
 import FlashAlert from '@/components/flash-alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,16 +37,16 @@ type Props = {
 
 export default function AccountsIndex({ accounts, filters }: Props) {
     const [search, setSearch] = useState(filters.search ?? '');
+    const [deleting, setDeleting] = useState<Account | null>(null);
 
     function submit(event: FormEvent) {
         event.preventDefault();
         router.get('/accounts', { search }, { preserveState: true, replace: true });
     }
 
-    function destroy(account: Account) {
-        if (confirm(`Delete ${account.name}? Contacts and deals will stay, but their account link will be removed.`)) {
-            router.delete(`/accounts/${account.id}`);
-        }
+    function confirmDelete() {
+        if (!deleting) return;
+        router.delete(`/accounts/${deleting.id}`, { onFinish: () => setDeleting(null) });
     }
 
     return (
@@ -110,7 +111,7 @@ export default function AccountsIndex({ accounts, filters }: Props) {
                                                 <Button asChild variant="outline" size="sm">
                                                     <Link href={`/accounts/${account.id}/edit`}>Edit</Link>
                                                 </Button>
-                                                <Button variant="destructive" size="sm" onClick={() => destroy(account)}>
+                                                <Button variant="destructive" size="sm" onClick={() => setDeleting(account)}>
                                                     Delete
                                                 </Button>
                                             </div>
@@ -140,6 +141,14 @@ export default function AccountsIndex({ accounts, filters }: Props) {
                     ))}
                 </div>
             </div>
+            <ConfirmDialog
+                open={Boolean(deleting)}
+                onClose={() => setDeleting(null)}
+                onConfirm={confirmDelete}
+                title={`Delete ${deleting?.name}?`}
+                description="Contacts and deals will stay, but their account link will be removed. This cannot be undone."
+                confirmLabel="Delete account"
+            />
         </AppLayout>
     );
 }

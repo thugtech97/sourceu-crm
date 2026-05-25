@@ -35,6 +35,65 @@ class DealController extends Controller
         ]);
     }
 
+    public function kanban(Request $request): Response
+    {
+        $ownerId = $request->user()->id;
+
+        $pipelineStages = [
+            Deal::STAGE_NEW,
+            Deal::STAGE_MEETING_BOOKED,
+            Deal::STAGE_QUALIFIED,
+            Deal::STAGE_PROPOSAL,
+            Deal::STAGE_WON,
+        ];
+
+        $deals = Deal::query()
+            ->with(['contact:id,first_name,last_name', 'account:id,name'])
+            ->where('owner_id', $ownerId)
+            ->whereIn('stage', $pipelineStages)
+            ->latest()
+            ->get(['id', 'name', 'stage', 'value', 'probability', 'contact_id', 'account_id']);
+
+        $columns = collect($pipelineStages)->mapWithKeys(fn ($stage) => [
+            $stage => $deals->where('stage', $stage)->values(),
+        ]);
+
+        return Inertia::render('crm/deals/kanban', [
+            'columns' => $columns,
+            'pipelineStages' => $pipelineStages,
+        ]);
+    }
+
+    public function updateStage(Request $request, Deal $deal): RedirectResponse
+    {
+        abort_unless($deal->owner_id === $request->user()->id, 403);
+
+        $data = $request->validate([
+            'stage' => ['required', Rule::in([
+                Deal::STAGE_NEW,
+                Deal::STAGE_MEETING_BOOKED,
+                Deal::STAGE_QUALIFIED,
+                Deal::STAGE_PROPOSAL,
+                Deal::STAGE_WON,
+            ])],
+        ]);
+
+        $wasNotMeetingBooked = $deal->stage !== Deal::STAGE_MEETING_BOOKED;
+
+        $deal->update([
+            'stage' => $data['stage'],
+            'meeting_booked_at' => $data['stage'] === Deal::STAGE_MEETING_BOOKED
+                ? ($deal->meeting_booked_at ?? now())
+                : $deal->meeting_booked_at,
+        ]);
+
+        if ($wasNotMeetingBooked && $deal->stage === Deal::STAGE_MEETING_BOOKED) {
+            $request->user()->notify(new MeetingBookedDeal($deal));
+        }
+
+        return back();
+    }
+
     public function create(Request $request): Response
     {
         return Inertia::render('crm/deals/create', $this->formOptions($request));
@@ -84,7 +143,7 @@ class DealController extends Controller
                     : $deal->meeting_booked_at,
             ]);
 
-            if (!$wasMeetingBooked && $deal->stage === Deal::STAGE_MEETING_BOOKED) {
+            if (! $wasMeetingBooked && $deal->stage === Deal::STAGE_MEETING_BOOKED) {
                 $request->user()->notify(new MeetingBookedDeal($deal));
             }
         });

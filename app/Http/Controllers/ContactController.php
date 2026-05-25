@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Account;
 use App\Models\CallLog;
 use App\Models\Contact;
+use App\Services\LeadRoutingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -31,7 +32,7 @@ class ContactController extends Controller
                     });
                 })
                 ->latest()
-                ->paginate(10)
+                ->paginate(10, ['id', 'account_id', 'first_name', 'last_name', 'email', 'phone', 'job_title', 'status', 'source_type'])
                 ->withQueryString(),
             'filters' => [
                 'search' => $search,
@@ -46,12 +47,18 @@ class ContactController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, LeadRoutingService $router): RedirectResponse
     {
-        Contact::create([
-            ...$this->validated($request),
+        $data = $this->validated($request);
+
+        $contact = Contact::create([
+            ...$data,
             'owner_id' => $request->user()->id,
         ]);
+
+        if ($data['status'] === 'lead') {
+            $router->ingest($contact, $data['source_type'] ?? Contact::SOURCE_INBOUND);
+        }
 
         return to_route('contacts.index')->with('status', 'Contact created.');
     }
@@ -99,6 +106,7 @@ class ContactController extends Controller
             'phone' => ['nullable', 'string', 'max:255'],
             'job_title' => ['nullable', 'string', 'max:255'],
             'status' => ['required', Rule::in(['lead', 'prospect', 'customer', 'inactive'])],
+            'source_type' => ['nullable', Rule::in([Contact::SOURCE_INBOUND, Contact::SOURCE_COLD])],
             'notes' => ['nullable', 'string'],
         ]);
     }
