@@ -64,8 +64,6 @@ class DialpadController extends Controller
 
     public function dial(Request $request, Contact $contact): RedirectResponse
     {
-        abort_unless($contact->owner_id === $request->user()->id, 404);
-
         try {
             $callLog = $this->dialpad->initiateCall($contact, $request->user());
         } catch (\RuntimeException $e) {

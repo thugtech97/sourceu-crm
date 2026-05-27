@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\Admin\AuditLogController;
+use App\Http\Controllers\Admin\UserApprovalController;
+use App\Http\Controllers\Auth\PendingApprovalController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CrmDashboardController;
 use App\Http\Controllers\DealController;
@@ -20,7 +23,13 @@ Route::get('/', function () {
 Route::post('webhooks/dialpad', DialpadWebhookController::class)->name('webhooks.dialpad');
 Route::post('webhooks/zapier/leads', ZapierLeadWebhookController::class)->name('webhooks.zapier.leads');
 
-Route::middleware(['auth'])->group(function () {
+// Verified users waiting for admin approval.
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('pending-approval', PendingApprovalController::class)->name('pending-approval');
+});
+
+// Fully authenticated, verified, and admin-approved users.
+Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     Route::get('dashboard', function () {
         return redirect()->route('crm.dashboard');
     })->name('dashboard');
@@ -47,6 +56,17 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('leads/pool/{contact}/disposition', [LeadPoolController::class, 'setDisposition'])->name('leads.pool.disposition');
     Route::patch('leads/pool/{contact}/release', [LeadPoolController::class, 'release'])->name('leads.pool.release');
 });
+
+// Admin panel — approved admins only.
+Route::middleware(['auth', 'verified', 'approved', 'admin'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        Route::get('users', [UserApprovalController::class, 'index'])->name('users.index');
+        Route::patch('users/{user}/approve', [UserApprovalController::class, 'approve'])->name('users.approve');
+        Route::delete('users/{user}', [UserApprovalController::class, 'destroy'])->name('users.destroy');
+        Route::get('audit-log', AuditLogController::class)->name('audit-log');
+    });
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

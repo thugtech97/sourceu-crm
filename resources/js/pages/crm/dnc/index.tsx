@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
+import { formatDate } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { Ban } from 'lucide-react';
@@ -52,10 +53,6 @@ export default function DncIndex({ entries, filters, total }: Props) {
     function confirmRemove() {
         if (!removing) return;
         router.delete(`/dnc/${removing.id}`, { onFinish: () => setRemoving(null) });
-    }
-
-    function formatDate(iso: string) {
-        return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     }
 
     return (

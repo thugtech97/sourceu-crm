@@ -1,9 +1,9 @@
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
-import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/react';
-import { Ban, Building2, Handshake, Kanban, LayoutGrid, PhoneIncoming, Users } from 'lucide-react';
+import { type NavItem, type SharedData } from '@/types';
+import { Link, usePage } from '@inertiajs/react';
+import { Ban, Building2, ClipboardList, Handshake, Kanban, LayoutGrid, PhoneIncoming, ShieldCheck, Users } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -45,6 +45,22 @@ const mainNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
+    const { auth, pending_approvals_count } = usePage<SharedData>().props;
+
+    const adminNavItems: NavItem[] = [
+        {
+            title: 'User Approvals',
+            url: '/admin/users',
+            icon: ShieldCheck,
+            badge: pending_approvals_count > 0 ? pending_approvals_count : null,
+        },
+        {
+            title: 'Audit Log',
+            url: '/admin/audit-log',
+            icon: ClipboardList,
+        },
+    ];
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
@@ -61,6 +77,7 @@ export function AppSidebar() {
 
             <SidebarContent>
                 <NavMain items={mainNavItems} />
+                {auth.user.is_admin && <NavMain items={adminNavItems} label="Admin" />}
             </SidebarContent>
 
             <SidebarFooter>

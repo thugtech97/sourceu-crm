@@ -8,10 +8,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use OwenIt\Auditing\Auditable as AuditableTrait;
+use OwenIt\Auditing\Contracts\Auditable;
 
-class Contact extends Model
+class Contact extends Model implements Auditable
 {
     /** @use HasFactory<ContactFactory> */
+    use AuditableTrait;
+
     use HasFactory;
 
     public const SOURCE_INBOUND = 'inbound';

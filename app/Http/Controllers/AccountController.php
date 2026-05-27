@@ -12,13 +12,11 @@ class AccountController extends Controller
 {
     public function index(Request $request): Response
     {
-        $ownerId = $request->user()->id;
         $search = $request->string('search')->toString();
 
         return Inertia::render('crm/accounts/index', [
             'accounts' => Account::query()
                 ->withCount(['contacts', 'deals'])
-                ->where('owner_id', $ownerId)
                 ->when($search, fn ($query) => $query->where('name', 'like', "%{$search}%"))
                 ->orderBy('name')
                 ->paginate(10)
@@ -44,10 +42,8 @@ class AccountController extends Controller
         return to_route('accounts.index')->with('status', 'Account created.');
     }
 
-    public function edit(Request $request, Account $account): Response
+    public function edit(Account $account): Response
     {
-        abort_unless($account->owner_id === $request->user()->id, 404);
-
         return Inertia::render('crm/accounts/edit', [
             'account' => $account,
         ]);
@@ -55,17 +51,13 @@ class AccountController extends Controller
 
     public function update(Request $request, Account $account): RedirectResponse
     {
-        abort_unless($account->owner_id === $request->user()->id, 404);
-
         $account->update($this->validated($request));
 
         return to_route('accounts.index')->with('status', 'Account updated.');
     }
 
-    public function destroy(Request $request, Account $account): RedirectResponse
+    public function destroy(Account $account): RedirectResponse
     {
-        abort_unless($account->owner_id === $request->user()->id, 404);
-
         $account->delete();
 
         return to_route('accounts.index')->with('status', 'Account deleted.');

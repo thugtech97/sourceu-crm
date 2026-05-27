@@ -2,27 +2,41 @@
 
 namespace App\Models;
 
+use Database\Factories\DealFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use OwenIt\Auditing\Auditable as AuditableTrait;
+use OwenIt\Auditing\Contracts\Auditable;
 
-class Deal extends Model
+class Deal extends Model implements Auditable
 {
-    /** @use HasFactory<\Database\Factories\DealFactory> */
+    /** @use HasFactory<DealFactory> */
+    use AuditableTrait;
+
     use HasFactory;
 
     public const STAGE_NEW = 'new';
+
     public const STAGE_MEETING_BOOKED = 'meeting_booked';
+
     public const STAGE_QUALIFIED = 'qualified';
+
     public const STAGE_PROPOSAL = 'proposal';
+
     public const STAGE_WON = 'won';
+
     public const STAGE_WARM_EMAIL_NURTURE = 'warm_email_nurture';
+
     public const STAGE_DNC = 'dnc';
+
     public const STAGE_LOST = 'lost';
 
     public const MEETING_OUTCOME_QUALIFIED = 'qualified';
+
     public const MEETING_OUTCOME_WARM_EMAIL_NURTURE = 'warm_email_nurture';
+
     public const MEETING_OUTCOME_DNC = 'dnc';
 
     public const STAGES = [

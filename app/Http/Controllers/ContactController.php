@@ -16,13 +16,11 @@ class ContactController extends Controller
 {
     public function index(Request $request): Response
     {
-        $ownerId = $request->user()->id;
         $search = $request->string('search')->toString();
 
         return Inertia::render('crm/contacts/index', [
             'contacts' => Contact::query()
                 ->with('account:id,name')
-                ->where('owner_id', $ownerId)
                 ->when($search, function ($query) use ($search) {
                     $query->where(function ($query) use ($search) {
                         $query->where('first_name', 'like', "%{$search}%")
@@ -43,7 +41,7 @@ class ContactController extends Controller
     public function create(Request $request): Response
     {
         return Inertia::render('crm/contacts/create', [
-            'accounts' => $this->accountOptions($request),
+            'accounts' => $this->accountOptions(),
         ]);
     }
 
@@ -65,11 +63,9 @@ class ContactController extends Controller
 
     public function edit(Request $request, Contact $contact): Response
     {
-        abort_unless($contact->owner_id === $request->user()->id, 404);
-
         return Inertia::render('crm/contacts/edit', [
             'contact' => $contact->load('account:id,name'),
-            'accounts' => $this->accountOptions($request),
+            'accounts' => $this->accountOptions(),
             'callLogs' => CallLog::query()
                 ->where('contact_id', $contact->id)
                 ->latest('started_at')
@@ -80,8 +76,6 @@ class ContactController extends Controller
 
     public function update(Request $request, Contact $contact): RedirectResponse
     {
-        abort_unless($contact->owner_id === $request->user()->id, 404);
-
         $contact->update($this->validated($request));
 
         return to_route('contacts.index')->with('status', 'Contact updated.');
@@ -89,8 +83,6 @@ class ContactController extends Controller
 
     public function destroy(Request $request, Contact $contact): RedirectResponse
     {
-        abort_unless($contact->owner_id === $request->user()->id, 404);
-
         $contact->delete();
 
         return to_route('contacts.index')->with('status', 'Contact deleted.');
@@ -99,7 +91,7 @@ class ContactController extends Controller
     private function validated(Request $request): array
     {
         return $request->validate([
-            'account_id' => ['nullable', Rule::exists('accounts', 'id')->where('owner_id', $request->user()->id)],
+            'account_id' => ['nullable', Rule::exists('accounts', 'id')],
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],
@@ -111,11 +103,11 @@ class ContactController extends Controller
         ]);
     }
 
-    private function accountOptions(Request $request)
+    private function accountOptions(): array
     {
         return Account::query()
-            ->where('owner_id', $request->user()->id)
             ->orderBy('name')
-            ->get(['id', 'name']);
+            ->get(['id', 'name'])
+            ->all();
     }
 }

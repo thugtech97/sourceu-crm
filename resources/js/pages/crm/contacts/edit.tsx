@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
+import { formatDateTime } from '@/lib/utils';
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { LoaderCircle, Phone, PhoneIncoming, PhoneMissed, PhoneOutgoing } from 'lucide-react';
@@ -61,17 +62,6 @@ function formatDuration(seconds: number | null): string {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
     return m > 0 ? `${m}m ${s}s` : `${s}s`;
-}
-
-function formatDate(dateStr: string | null): string {
-    if (!dateStr) return '—';
-    return new Date(dateStr).toLocaleString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-    });
 }
 
 function CallStatusIcon({ direction, status }: { direction: string; status: string }) {
@@ -173,7 +163,7 @@ export default function EditContact({ contact, accounts, callLogs }: Props) {
                                                 <p className="text-sm font-medium capitalize">
                                                     {log.direction} · {log.status}
                                                 </p>
-                                                <p className="text-muted-foreground text-xs">{formatDate(log.started_at)}</p>
+                                                <p className="text-muted-foreground text-xs">{formatDateTime(log.started_at)}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-3">

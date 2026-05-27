@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -64,6 +65,9 @@ class HandleInertiaRequests extends Middleware
                         'created_at' => $notification->created_at?->diffForHumans(),
                     ]) ?? [],
             ],
+            'pending_approvals_count' => fn () => $user?->is_admin
+                ? User::pendingApproval()->count()
+                : 0,
         ]);
     }
 }

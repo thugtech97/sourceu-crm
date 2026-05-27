@@ -19,6 +19,7 @@ export interface NavItem {
     url: string;
     icon?: LucideIcon | null;
     isActive?: boolean;
+    badge?: number | string | null;
 }
 
 export interface SharedData {
@@ -32,6 +33,7 @@ export interface SharedData {
         unread_count: number;
         items: NotificationItem[];
     };
+    pending_approvals_count: number;
     [key: string]: unknown;
 }
 
@@ -49,7 +51,9 @@ export interface User {
     email: string;
     avatar?: string;
     email_verified_at: string | null;
+    is_approved: boolean;
+    is_admin: boolean;
     created_at: string;
     updated_at: string;
-    [key: string]: unknown; // This allows for additional properties...
+    [key: string]: unknown;
 }
