@@ -49,6 +49,14 @@ class ContactController extends Controller
     {
         $data = $this->validated($request);
 
+        // Check for duplicate email if email is provided
+        if (! empty($data['email'])) {
+            $existingContact = Contact::where('email', $data['email'])->first();
+            if ($existingContact) {
+                return back()->withErrors(['email' => 'The email has already been taken.'])->withInput();
+            }
+        }
+
         $contact = Contact::create([
             ...$data,
             'owner_id' => $request->user()->id,
