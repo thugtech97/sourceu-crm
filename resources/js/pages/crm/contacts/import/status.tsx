@@ -186,11 +186,20 @@ export default function ImportStatus({ batch: initialBatch }: Props) {
                             <li>Fix the data issues in the remaining columns</li>
                             <li>Re-upload the file to import the corrected records</li>
                         </ul>
-                        <Button asChild variant="outline" size="sm">
-                            <a href={`/contacts/import/${batch.id}/download-errors`} download>
-                                <Download className="mr-2 h-4 w-4" />
-                                Download Error Log (CSV)
-                            </a>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                                const link = document.createElement('a');
+                                link.href = `/contacts/import/${batch.id}/download-errors`;
+                                link.download = `contact-import-errors-${batch.id}.csv`;
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                            }}
+                        >
+                            <Download className="mr-2 h-4 w-4" />
+                            Download Error Log (CSV)
                         </Button>
                     </div>
                 )}

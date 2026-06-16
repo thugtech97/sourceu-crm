@@ -276,7 +276,7 @@ class ContactImportController extends Controller
         ]);
     }
 
-    public function downloadErrorLog(ContactImportBatch $batch): StreamedResponse
+    public function downloadErrorLog(ContactImportBatch $batch)
     {
         if ($batch->created_by !== auth()->id()) {
             abort(403);
@@ -299,7 +299,7 @@ class ContactImportController extends Controller
                 'Content-Type' => 'text/csv; charset=UTF-8',
                 'Content-Disposition' => 'attachment; filename="contact-import-errors-'.$batch->id.'.csv"',
             ]
-        );
+        )->deleteFileAfterSend(false);
     }
 
     private function parseFile(string $filepath, string $extension): array
