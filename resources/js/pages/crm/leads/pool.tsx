@@ -190,10 +190,19 @@ function PoolRow({ contact }: { contact: PoolContact }) {
 function MyLeadRow({ contact, team }: { contact: PoolContact; team: string }) {
     const [dispositionOpen, setDispositionOpen] = useState(false);
     const [releaseOpen, setReleaseOpen] = useState(false);
+    const [dialing, setDialing] = useState(false);
     const timer = timeLeft(contact.pool_expires_at);
 
     function release() {
         router.patch(`/leads/pool/${contact.id}/release`, {}, { preserveScroll: true, onFinish: () => setReleaseOpen(false) });
+    }
+
+    function dialContact() {
+        setDialing(true);
+        router.post(`/contacts/${contact.id}/dialpad/dial`, {}, {
+            preserveScroll: true,
+            onFinish: () => setDialing(false),
+        });
     }
 
     return (
@@ -232,10 +241,8 @@ function MyLeadRow({ contact, team }: { contact: PoolContact; team: string }) {
                             Set outcome
                         </Button>
                         {contact.phone && (
-                            <Button size="sm" variant="outline" asChild>
-                                <a href={`tel:${contact.phone}`}>
-                                    <Phone className="size-3.5" />
-                                </a>
+                            <Button size="sm" variant="outline" disabled={dialing} onClick={dialContact} title="Call with Dialpad">
+                                <Phone className="size-3.5" />
                             </Button>
                         )}
                         <Button size="sm" variant="ghost" onClick={() => setReleaseOpen(true)} title="Release to pool">

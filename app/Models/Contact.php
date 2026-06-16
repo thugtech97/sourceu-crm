@@ -43,6 +43,7 @@ class Contact extends Model implements Auditable
     protected $fillable = [
         'owner_id',
         'account_id',
+        'contact_import_batch_id',
         'first_name',
         'last_name',
         'email',

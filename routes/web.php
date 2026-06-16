@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\UserApprovalController;
 use App\Http\Controllers\Auth\PendingApprovalController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\ContactImportController;
 use App\Http\Controllers\CrmDashboardController;
 use App\Http\Controllers\DealController;
 use App\Http\Controllers\DialpadController;
@@ -38,6 +39,19 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     Route::resource('accounts', AccountController::class)->except(['show']);
     Route::post('contacts/{contact}/dialpad/dial', [DialpadController::class, 'dial'])->name('contacts.dialpad.dial');
     Route::resource('contacts', ContactController::class)->except(['show']);
+
+    // Contact import routes
+    Route::get('contacts/import', [ContactImportController::class, 'index'])->name('contacts.import.index');
+    Route::post('contacts/import/upload', [ContactImportController::class, 'upload'])->name('contacts.import.upload');
+    Route::get('contacts/import/mapping', [ContactImportController::class, 'mapping'])->name('contacts.import.mapping');
+    Route::post('contacts/import/confirm', [ContactImportController::class, 'confirm'])->name('contacts.import.confirm');
+    Route::get('contacts/import-template/csv', [ContactImportController::class, 'downloadTemplate'])->name('contacts.import-template.csv');
+    Route::get('contacts/import-template/xlsx', [ContactImportController::class, 'downloadExcelTemplate'])->name('contacts.import-template.xlsx');
+    // More specific routes BEFORE the generic {batch} route
+    Route::get('contacts/import/{batch}/status', [ContactImportController::class, 'getStatus'])->name('contacts.import.get-status');
+    Route::get('contacts/import/{batch}/download-errors', [ContactImportController::class, 'downloadErrorLog'])->name('contacts.import.download-errors');
+    Route::get('contacts/import/{batch}', [ContactImportController::class, 'status'])->name('contacts.import.status');
+
     Route::post('dialpad/connect', [DialpadController::class, 'connect'])->name('dialpad.connect');
     Route::post('dialpad/test-lookup', [DialpadController::class, 'testLookup'])->name('dialpad.test-lookup');
     Route::get('deals/kanban', [DealController::class, 'kanban'])->name('deals.kanban');
