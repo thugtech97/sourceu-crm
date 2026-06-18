@@ -6,6 +6,7 @@ use App\Models\CallLog;
 use App\Models\Contact;
 use App\Models\DialpadWebhookLog;
 use App\Models\User;
+use App\Services\DialpadService;
 use App\Services\LeadRoutingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -13,7 +14,10 @@ use Illuminate\Support\Facades\Log;
 
 class DialpadWebhookController extends Controller
 {
-    public function __construct(private readonly LeadRoutingService $router) {}
+    public function __construct(
+        private readonly LeadRoutingService $router,
+        private readonly DialpadService $dialpad,
+    ) {}
 
     public function __invoke(Request $request): JsonResponse
     {
@@ -151,17 +155,72 @@ class DialpadWebhookController extends Controller
 
     private function onRecordingReady(array $payload, string $callId): void
     {
-        CallLog::where('dialpad_call_id', $callId)
-            ->update(['recording_url' => $payload['recording_url'] ?? $payload['url'] ?? null]);
+        $callLog = CallLog::where('dialpad_call_id', $callId)->first();
+
+        if (! $callLog) {
+            return;
+        }
+
+        // First try to get URL from payload
+        $recordingUrl = $payload['recording_url'] ?? $payload['url'] ?? null;
+
+        // If not in payload, fetch from Dialpad API
+        if (! $recordingUrl) {
+            try {
+                $recordingUrl = $this->dialpad->getRecordingUrl($callId);
+            } catch (\Exception $e) {
+                Log::warning('Failed to fetch recording URL from Dialpad API', [
+                    'call_id' => $callId,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        if ($recordingUrl) {
+            $callLog->update(['recording_url' => $recordingUrl]);
+            Log::info('Recording URL stored for call', [
+                'call_id' => $callId,
+                'recording_url' => $recordingUrl,
+            ]);
+        }
     }
 
     private function onTranscriptionReady(array $payload, string $callId): void
     {
-        CallLog::where('dialpad_call_id', $callId)
-            ->update([
-                'transcript_url' => $payload['transcript_url'] ?? null,
-                'transcript_text' => $payload['transcript'] ?? $payload['text'] ?? null,
+        $callLog = CallLog::where('dialpad_call_id', $callId)->first();
+
+        if (! $callLog) {
+            return;
+        }
+
+        // First try to get transcript from payload
+        $transcriptText = $payload['transcript'] ?? $payload['text'] ?? null;
+        $transcriptUrl = $payload['transcript_url'] ?? null;
+
+        // If not in payload, fetch from Dialpad API
+        if (! $transcriptText) {
+            try {
+                $transcriptText = $this->dialpad->getTranscript($callId);
+            } catch (\Exception $e) {
+                Log::warning('Failed to fetch transcript from Dialpad API', [
+                    'call_id' => $callId,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        if ($transcriptText || $transcriptUrl) {
+            $callLog->update([
+                'transcript_url' => $transcriptUrl,
+                'transcript_text' => $transcriptText,
             ]);
+
+            Log::info('Transcript stored for call', [
+                'call_id' => $callId,
+                'has_text' => (bool) $transcriptText,
+                'has_url' => (bool) $transcriptUrl,
+            ]);
+        }
     }
 
     private function signatureIsValid(Request $request): bool

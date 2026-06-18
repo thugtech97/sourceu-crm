@@ -9,8 +9,10 @@ use App\Http\Controllers\ContactImportController;
 use App\Http\Controllers\CrmDashboardController;
 use App\Http\Controllers\DealController;
 use App\Http\Controllers\DialpadController;
+use App\Http\Controllers\DialpadTestController;
 use App\Http\Controllers\DialpadWebhookController;
 use App\Http\Controllers\DncListController;
+use App\Http\Controllers\LeadImportController;
 use App\Http\Controllers\LeadPoolController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ZapierLeadWebhookController;
@@ -38,6 +40,7 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     Route::get('crm', CrmDashboardController::class)->name('crm.dashboard');
     Route::resource('accounts', AccountController::class)->except(['show']);
     Route::post('contacts/{contact}/dialpad/dial', [DialpadController::class, 'dial'])->name('contacts.dialpad.dial');
+    Route::get('contacts/{contact}/dialpad/transcripts', [DialpadController::class, 'getCallTranscripts'])->name('contacts.dialpad.transcripts');
     Route::resource('contacts', ContactController::class)->except(['show']);
 
     // Contact import routes
@@ -54,6 +57,23 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
 
     Route::post('dialpad/connect', [DialpadController::class, 'connect'])->name('dialpad.connect');
     Route::post('dialpad/test-lookup', [DialpadController::class, 'testLookup'])->name('dialpad.test-lookup');
+
+    // Dialpad testing & debugging routes
+    Route::prefix('dialpad/test')->name('dialpad.test.')->group(function () {
+        Route::get('dashboard', [DialpadTestController::class, 'dashboard'])->name('dashboard');
+        Route::get('status', [DialpadTestController::class, 'status'])->name('status');
+        Route::match(['get', 'post'], 'connection', [DialpadTestController::class, 'testConnection'])->name('connection');
+        Route::match(['get', 'post'], 'user-lookup', [DialpadTestController::class, 'testUserLookup'])->name('user-lookup');
+        Route::match(['get', 'post'], 'webhook-secret', [DialpadTestController::class, 'testWebhookSecret'])->name('webhook-secret');
+        Route::match(['get', 'post'], 'simulate-webhook', [DialpadTestController::class, 'simulateWebhookEvent'])->name('simulate-webhook');
+        Route::get('call-logs', [DialpadTestController::class, 'getCallLogs'])->name('call-logs');
+        Route::get('webhook-logs', [DialpadTestController::class, 'getWebhookLogs'])->name('webhook-logs');
+        Route::post('clear-test-data', [DialpadTestController::class, 'clearTestData'])->name('clear-test-data');
+        Route::get('export-calls', [DialpadTestController::class, 'exportCallLogs'])->name('export-calls');
+        Route::post('fetch-transcript', [DialpadTestController::class, 'fetchCallTranscript'])->name('fetch-transcript');
+        Route::get('calls-without-transcripts', [DialpadTestController::class, 'getCallsWithoutTranscripts'])->name('calls-without-transcripts');
+    });
+
     Route::get('deals/kanban', [DealController::class, 'kanban'])->name('deals.kanban');
     Route::patch('deals/{deal}/stage', [DealController::class, 'updateStage'])->name('deals.stage');
     Route::patch('deals/{deal}/meeting-outcome', [DealController::class, 'logMeetingOutcome'])->name('deals.meeting-outcome');
@@ -66,9 +86,24 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     Route::delete('dnc/{dnc}', [DncListController::class, 'destroy'])->name('dnc.destroy');
 
     Route::get('leads/pool', [LeadPoolController::class, 'index'])->name('leads.pool.index');
+    Route::post('leads/pool/bulk-claim', [LeadPoolController::class, 'bulkClaim'])->name('leads.pool.bulk-claim');
     Route::post('leads/pool/{contact}/claim', [LeadPoolController::class, 'claim'])->name('leads.pool.claim');
     Route::patch('leads/pool/{contact}/disposition', [LeadPoolController::class, 'setDisposition'])->name('leads.pool.disposition');
     Route::patch('leads/pool/{contact}/release', [LeadPoolController::class, 'release'])->name('leads.pool.release');
+    Route::patch('leads/pool/{contact}/archive', [LeadPoolController::class, 'archive'])->name('leads.pool.archive');
+    Route::patch('leads/pool/{contact}/restore', [LeadPoolController::class, 'restore'])->name('leads.pool.restore');
+
+    // Lead import routes
+    Route::get('leads/import', [LeadImportController::class, 'index'])->name('leads.import.index');
+    Route::post('leads/import/upload', [LeadImportController::class, 'upload'])->name('leads.import.upload');
+    Route::get('leads/import/mapping', [LeadImportController::class, 'mapping'])->name('leads.import.mapping');
+    Route::post('leads/import/confirm', [LeadImportController::class, 'confirm'])->name('leads.import.confirm');
+    Route::get('leads/import-template/csv', [LeadImportController::class, 'downloadTemplate'])->name('leads.import-template.csv');
+    Route::get('leads/import-template/xlsx', [LeadImportController::class, 'downloadExcelTemplate'])->name('leads.import-template.xlsx');
+    // More specific routes BEFORE the generic {batch} route
+    Route::get('leads/import/{batch}/status', [LeadImportController::class, 'getStatus'])->name('leads.import.get-status');
+    Route::get('leads/import/{batch}/download-errors', [LeadImportController::class, 'downloadErrorLog'])->name('leads.import.download-errors');
+    Route::get('leads/import/{batch}', [LeadImportController::class, 'status'])->name('leads.import.status');
 });
 
 // Admin panel — approved admins only.

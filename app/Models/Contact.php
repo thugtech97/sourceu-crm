@@ -59,6 +59,9 @@ class Contact extends Model implements Auditable
         'pool_expires_at',
         'disposition',
         'converted_by',
+        'archived_at',
+        'archive_reason',
+        'archived_by',
     ];
 
     protected $appends = [
@@ -70,6 +73,7 @@ class Contact extends Model implements Auditable
         return [
             'pool_assigned_at' => 'datetime',
             'pool_expires_at' => 'datetime',
+            'archived_at' => 'datetime',
         ];
     }
 
@@ -106,6 +110,11 @@ class Contact extends Model implements Auditable
     public function convertedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'converted_by');
+    }
+
+    public function archivedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'archived_by');
     }
 
     public function getNameAttribute(): string

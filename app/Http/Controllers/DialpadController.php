@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Activity;
 use App\Models\Contact;
 use App\Services\DialpadService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -80,5 +81,38 @@ class DialpadController extends Controller
         ]);
 
         return back()->with('status', 'Dialpad call started. Your softphone should ring shortly.');
+    }
+
+    public function getCallTranscripts(Request $request, Contact $contact): JsonResponse
+    {
+        $limit = min($request->input('limit', 10), 50);
+
+        $calls = $contact->callLogs()
+            ->whereNotNull('transcript_text')
+            ->latest()
+            ->limit($limit)
+            ->get()
+            ->map(fn ($call) => [
+                'id' => $call->id,
+                'dialpad_call_id' => $call->dialpad_call_id,
+                'status' => $call->status,
+                'direction' => $call->direction,
+                'duration_seconds' => $call->duration_seconds,
+                'transcript_text' => $call->transcript_text,
+                'recording_url' => $call->recording_url,
+                'started_at' => $call->started_at?->format('Y-m-d H:i:s'),
+                'ended_at' => $call->ended_at?->format('Y-m-d H:i:s'),
+                'user_name' => $call->user?->name,
+            ]);
+
+        return response()->json([
+            'success' => true,
+            'data' => $calls,
+            'contact' => [
+                'id' => $contact->id,
+                'name' => $contact->name,
+                'phone' => $contact->phone,
+            ],
+        ]);
     }
 }
