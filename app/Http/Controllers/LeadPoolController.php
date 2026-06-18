@@ -23,6 +23,7 @@ class LeadPoolController extends Controller
             ->with('account:id,name')
             ->where('pool_team', $team)
             ->whereNull('pool_assigned_to')
+            ->whereNull('archived_at')
             ->whereIn('disposition', [Contact::DISPOSITION_NEW_LEAD, Contact::DISPOSITION_RECYCLED])
             ->latest();
 
@@ -30,12 +31,21 @@ class LeadPoolController extends Controller
             ->with('account:id,name')
             ->where('pool_team', $team)
             ->where('pool_assigned_to', $userId)
+            ->whereNull('archived_at')
             ->whereIn('disposition', [Contact::DISPOSITION_NEW_LEAD, Contact::DISPOSITION_RECYCLED])
             ->latest('pool_assigned_at');
+
+        $archivedQuery = Contact::query()
+            ->with(['account:id,name', 'archivedBy:id,name'])
+            ->where('pool_team', $team)
+            ->where('pool_assigned_to', $userId)
+            ->whereNotNull('archived_at')
+            ->latest('archived_at');
 
         return Inertia::render('crm/leads/pool', [
             'pool' => $poolQuery->paginate(20, pageName: 'pool_page')->withQueryString(),
             'myLeads' => $myLeadsQuery->paginate(20, pageName: 'my_page')->withQueryString(),
+            'archived' => $archivedQuery->paginate(20, pageName: 'archive_page')->withQueryString(),
             'team' => $team,
             'teams' => [
                 ['value' => Contact::TEAM_SALES, 'label' => 'Inbound Sales'],
@@ -51,6 +61,36 @@ class LeadPoolController extends Controller
         return back()->with(
             $claimed ? 'status' : 'error',
             $claimed ? 'Lead claimed successfully.' : 'Lead was already claimed by another rep.',
+        );
+    }
+
+    public function bulkClaim(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'contact_ids' => ['required', 'array', 'min:1'],
+            'contact_ids.*' => ['integer', 'exists:contacts,id'],
+        ]);
+
+        $contacts = Contact::whereIn('id', $validated['contact_ids'])->get();
+        $user = $request->user();
+        $claimed = 0;
+        $failed = 0;
+
+        foreach ($contacts as $contact) {
+            if ($this->router->claim($contact, $user)) {
+                $claimed++;
+            } else {
+                $failed++;
+            }
+        }
+
+        $message = $claimed > 0
+            ? "$claimed lead(s) claimed successfully.".($failed > 0 ? " $failed failed." : '')
+            : 'No leads could be claimed.';
+
+        return back()->with(
+            $claimed > 0 ? 'status' : 'error',
+            $message,
         );
     }
 
@@ -103,5 +143,38 @@ class LeadPoolController extends Controller
         ]);
 
         return to_route('leads.pool.index')->with('status', 'Lead released back to pool.');
+    }
+
+    public function archive(Request $request, Contact $contact): RedirectResponse
+    {
+        abort_unless($contact->pool_assigned_to === $request->user()->id, 403);
+
+        $validated = $request->validate([
+            'reason' => ['required', 'string', 'max:255'],
+        ]);
+
+        $contact->update([
+            'archived_at' => now(),
+            'archive_reason' => $validated['reason'],
+            'archived_by' => $request->user()->id,
+            'pool_assigned_at' => null,
+            'pool_expires_at' => null,
+        ]);
+
+        return to_route('leads.pool.index')->with('status', 'Lead archived successfully.');
+    }
+
+    public function restore(Request $request, Contact $contact): RedirectResponse
+    {
+        abort_unless($contact->pool_assigned_to === $request->user()->id, 403);
+
+        $contact->update([
+            'archived_at' => null,
+            'archive_reason' => null,
+            'pool_assigned_at' => now(),
+            'pool_expires_at' => now()->addHours(24),
+        ]);
+
+        return to_route('leads.pool.index')->with('status', 'Lead restored to pool successfully.');
     }
 }

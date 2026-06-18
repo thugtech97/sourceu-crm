@@ -38,7 +38,9 @@ return [
     'dialpad' => [
         'api_key' => env('DIALPAD_API_KEY'),
         'webhook_secret' => env('DIALPAD_WEBHOOK_SECRET'),
-        'base_url' => env('DIALPAD_BASE_URL', 'https://dialpad.com/api/v2'),
+        'base_url' => env('DIALPAD_SANDBOX_MODE') ? env('DIALPAD_SANDBOX_BASE_URL', 'https://sandbox.dialpad.com/api/v2') : env('DIALPAD_BASE_URL', 'https://dialpad.com/api/v2'),
+        'sandbox_mode' => env('DIALPAD_SANDBOX_MODE', false),
+        'sandbox_base_url' => env('DIALPAD_SANDBOX_BASE_URL', 'https://sandbox.dialpad.com/api/v2'),
         'access_control_policy_id' => env('DIALPAD_ACCESS_CONTROL_POLICY_ID'),
         'access_control_target_type' => env('DIALPAD_ACCESS_CONTROL_TARGET_TYPE', 'company'),
         'access_control_target_id' => env('DIALPAD_ACCESS_CONTROL_TARGET_ID'),

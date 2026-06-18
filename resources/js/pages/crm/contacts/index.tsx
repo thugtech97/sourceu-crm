@@ -79,14 +79,9 @@ export default function ContactsIndex({ contacts, filters }: Props) {
                         <h1 className="text-2xl font-bold">Contacts</h1>
                         <p className="text-muted-foreground text-sm">People you are selling to, supporting, or nurturing.</p>
                     </div>
-                    <div className="flex gap-2">
-                        <Button asChild variant="outline" size="sm">
-                            <Link href="/contacts/import">⬆ Import</Link>
-                        </Button>
-                        <Button asChild size="sm">
-                            <Link href="/contacts/create">+ New contact</Link>
-                        </Button>
-                    </div>
+                    <Button asChild size="sm">
+                        <Link href="/contacts/create">+ New contact</Link>
+                    </Button>
                 </div>
 
                 <form onSubmit={submit} className="flex max-w-sm gap-2">

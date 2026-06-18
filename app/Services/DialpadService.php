@@ -207,4 +207,66 @@ class DialpadService
             'is_admin' => $user['is_admin'] ?? null,
         ];
     }
+
+    public function getCallDetails(string $callId): ?array
+    {
+        if (! config('services.dialpad.api_key')) {
+            throw new \RuntimeException('Dialpad API key is not configured.');
+        }
+
+        try {
+            $response = $this->get("/calls/{$callId}");
+
+            if ($response->successful()) {
+                return $response->json();
+            }
+
+            Log::error('Dialpad call details fetch failed', [
+                'call_id' => $callId,
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+
+            return null;
+        } catch (\Exception $e) {
+            Log::error('Dialpad call details fetch exception', [
+                'call_id' => $callId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
+    }
+
+    public function getTranscript(string $callId): ?string
+    {
+        $callDetails = $this->getCallDetails($callId);
+
+        if (! $callDetails) {
+            return null;
+        }
+
+        // Try different possible transcript fields
+        return $callDetails['transcript']
+            ?? $callDetails['transcription']
+            ?? $callDetails['transcript_text']
+            ?? $callDetails['call_transcript']
+            ?? null;
+    }
+
+    public function getRecordingUrl(string $callId): ?string
+    {
+        $callDetails = $this->getCallDetails($callId);
+
+        if (! $callDetails) {
+            return null;
+        }
+
+        // Try different possible recording URL fields
+        return $callDetails['recording_url']
+            ?? $callDetails['recording']
+            ?? $callDetails['call_recording_url']
+            ?? $callDetails['media_url']
+            ?? null;
+    }
 }
