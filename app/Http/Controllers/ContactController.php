@@ -61,6 +61,7 @@ class ContactController extends Controller
         $contact = Contact::create([
             ...$data,
             'owner_id' => $request->user()->id,
+            'disposition' => Contact::DISPOSITION_OPPORTUNITY,
         ]);
 
         if ($data['status'] === 'lead') {
