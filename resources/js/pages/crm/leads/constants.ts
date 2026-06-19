@@ -4,14 +4,14 @@ export const INBOUND_DISPOSITIONS: DispositionOption[] = [
     { value: 'opportunity',       label: 'Convert to opportunity', color: 'text-green-700', needsAccountName: true },
     { value: 'meeting_booked',    label: 'Meeting booked',         color: 'text-blue-700' },
     { value: 'warm_email',        label: 'Warm email nurture',     color: 'text-orange-700' },
-    { value: 'dnc',               label: 'Do Not Contact (DNC)',   color: 'text-red-700', needsReason: true },
+    { value: 'archive',           label: 'Archive',                color: 'text-amber-700', needsArchiveReason: true },
 ];
 
 export const COLD_DISPOSITIONS: DispositionOption[] = [
     { value: 'handoff_to_sales',  label: 'Hand off to sales',      color: 'text-green-700' },
     { value: 'meeting_booked',    label: 'Meeting booked',         color: 'text-blue-700' },
     { value: 'warm_email',        label: 'Warm email nurture',     color: 'text-orange-700' },
-    { value: 'dnc',               label: 'Do Not Contact (DNC)',   color: 'text-red-700', needsReason: true },
+    { value: 'archive',           label: 'Archive',                color: 'text-amber-700', needsArchiveReason: true },
 ];
 
 export const DISPOSITION_BADGE: Record<string, string> = {

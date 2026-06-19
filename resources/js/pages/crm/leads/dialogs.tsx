@@ -237,15 +237,24 @@ export function RestoreDialog({ contact, open, onClose }: { contact: PoolContact
 
 export function DispositionDialog({ contact, team, open, onClose }: { contact: PoolContact; team: string; open: boolean; onClose: () => void }) {
     const options = team === 'cold_calling' ? COLD_DISPOSITIONS : INBOUND_DISPOSITIONS;
-    const { data, setData, patch, processing } = useForm({ disposition: '', reason: '', account_name: '' });
+    const { data, setData, patch, processing } = useForm({ disposition: '', archive_reason: '', account_name: '' });
     const selected = options.find((o) => o.value === data.disposition);
 
     const isValid = data.disposition &&
         (!selected?.needsAccountName || data.account_name.trim()) &&
+        (!selected?.needsArchiveReason || data.archive_reason.trim()) &&
         !processing;
 
     function submit() {
-        patch(`/leads/pool/${contact.id}/disposition`, { onSuccess: onClose });
+        const payload = {
+            disposition: data.disposition,
+            ...(data.account_name && { account_name: data.account_name }),
+            ...(data.archive_reason && { archive_reason: data.archive_reason }),
+        };
+        patch(`/leads/pool/${contact.id}/disposition`, { 
+            data: payload,
+            onSuccess: onClose 
+        });
     }
 
     return (
@@ -279,19 +288,28 @@ export function DispositionDialog({ contact, team, open, onClose }: { contact: P
                             />
                         </div>
                     )}
-                    {selected?.needsReason && (
-                        <input
-                            className="border-input placeholder:text-muted-foreground flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs"
-                            placeholder="Reason for DNC…"
-                            value={data.reason}
-                            onChange={(e) => setData('reason', e.target.value)}
-                        />
+                    {selected?.needsArchiveReason && (
+                        <div className="grid gap-1.5">
+                            <label className="text-sm font-medium">Archive reason</label>
+                            <Select value={data.archive_reason} onValueChange={(v) => setData('archive_reason', v)}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select a reason…" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {ARCHIVE_REASONS.map((reason) => (
+                                        <SelectItem key={reason.value} value={reason.value}>
+                                            {reason.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                     )}
                 </div>
                 <DialogFooter>
                     <Button variant="outline" onClick={onClose}>Cancel</Button>
                     <Button disabled={!isValid} onClick={submit}>
-                        {selected?.needsAccountName ? 'Convert to opportunity' : 'Confirm'}
+                        {selected?.needsAccountName ? 'Convert to opportunity' : selected?.needsArchiveReason ? 'Archive' : 'Confirm'}
                     </Button>
                 </DialogFooter>
             </DialogContent>

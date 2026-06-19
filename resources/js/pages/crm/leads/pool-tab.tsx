@@ -1,10 +1,12 @@
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Link, router, useForm } from '@inertiajs/react';
+import { Check, Pencil } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { DISPOSITION_BADGE, initials } from './constants';
 import type { PoolContact, PaginationLink } from './types';
 
-export function PoolRow({ contact, isSelected, onSelect }: { contact: PoolContact; isSelected: boolean; onSelect: (id: number, selected: boolean) => void }) {
+export function PoolRow({ contact, isSelected, onSelect, onEdit }: { contact: PoolContact; isSelected: boolean; onSelect: (id: number, selected: boolean) => void; onEdit: (contact: PoolContact) => void }) {
     const [claiming, setClaiming] = useState(false);
 
     function claim() {
@@ -55,9 +57,26 @@ export function PoolRow({ contact, isSelected, onSelect }: { contact: PoolContac
                 </span>
             </td>
             <td className="px-4 py-3 text-right">
-                <Button size="sm" disabled={claiming} onClick={claim} className="min-w-16">
-                    {claiming ? 'Claiming…' : 'Claim'}
-                </Button>
+                <TooltipProvider delayDuration={0}>
+                    <div className="flex gap-1 justify-end">
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button size="sm" variant="ghost" onClick={() => onEdit(contact)}>
+                                    <Pencil className="size-4" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Edit</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button size="sm" variant="ghost" disabled={claiming} onClick={claim}>
+                                    <Check className="size-4" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>{claiming ? 'Claiming…' : 'Claim'}</TooltipContent>
+                        </Tooltip>
+                    </div>
+                </TooltipProvider>
             </td>
         </tr>
     );
@@ -72,9 +91,10 @@ type PoolTabProps = {
     onBulkClaim: () => void;
     bulkClaiming: boolean;
     selectAllRef: React.RefObject<HTMLInputElement>;
+    onEdit: (contact: PoolContact) => void;
 };
 
-export function PoolTab({ data, links, selectedLeads, onSelectLead, onSelectAll, onBulkClaim, bulkClaiming, selectAllRef }: PoolTabProps) {
+export function PoolTab({ data, links, selectedLeads, onSelectLead, onSelectAll, onBulkClaim, bulkClaiming, selectAllRef, onEdit }: PoolTabProps) {
     useEffect(() => {
         if (selectAllRef.current) {
             const indeterminate = selectedLeads.size > 0 && selectedLeads.size < data.length;
@@ -131,6 +151,7 @@ export function PoolTab({ data, links, selectedLeads, onSelectLead, onSelectAll,
                                 contact={contact}
                                 isSelected={selectedLeads.has(contact.id)}
                                 onSelect={onSelectLead}
+                                onEdit={onEdit}
                             />
                         ))}
                     </tbody>
