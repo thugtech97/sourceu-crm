@@ -8,6 +8,7 @@ import { useState, useRef } from 'react';
 import { ArchiveTab } from './archive-tab';
 import { MyLeadsTab } from './my-leads-tab';
 import { PoolTab } from './pool-tab';
+import AddLeadDialog from './add-lead-dialog';
 import type { LeadPoolProps } from './types';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Lead Pool', href: '/leads/pool' }];
@@ -16,11 +17,45 @@ export default function LeadPool({ pool, myLeads, archived, team, teams }: LeadP
     const [activeTab, setActiveTab] = useState<'pool' | 'mine' | 'archive'>('pool');
     const [selectedLeads, setSelectedLeads] = useState<Set<number>>(new Set());
     const [bulkClaiming, setBulkClaiming] = useState(false);
+    const [addLeadDialogOpen, setAddLeadDialogOpen] = useState(false);
+    const [editingContact, setEditingContact] = useState<any | null>(null);
+    
+    // Search and rows per page for each tab
+    const [poolSearch, setPoolSearch] = useState('');
+    const [poolRowsPerPage, setPoolRowsPerPage] = useState(20);
+    const [myLeadsSearch, setMyLeadsSearch] = useState('');
+    const [myLeadsRowsPerPage, setMyLeadsRowsPerPage] = useState(20);
+    const [archiveSearch, setArchiveSearch] = useState('');
+    const [archiveRowsPerPage, setArchiveRowsPerPage] = useState(20);
+    
     const selectAllRef = useRef<HTMLInputElement>(null);
     const { post } = useForm();
 
+    // Filter function
+    function searchContacts(contacts: any[], query: string) {
+        if (!query) return contacts;
+        const q = query.toLowerCase();
+        return contacts.filter((c) =>
+            c.first_name?.toLowerCase().includes(q) ||
+            c.last_name?.toLowerCase().includes(q) ||
+            c.email?.toLowerCase().includes(q) ||
+            c.phone?.toLowerCase().includes(q) ||
+            c.name?.toLowerCase().includes(q)
+        );
+    }
+
     function switchTeam(newTeam: string) {
         router.get('/leads/pool', { team: newTeam }, { preserveState: false });
+    }
+
+    function handleEditContact(contact: any) {
+        setEditingContact(contact);
+        setAddLeadDialogOpen(true);
+    }
+
+    function handleCloseDialog() {
+        setEditingContact(null);
+        setAddLeadDialogOpen(false);
     }
 
     function handleSelectLead(id: number, selected: boolean) {
@@ -80,6 +115,13 @@ export default function LeadPool({ pool, myLeads, archived, team, teams }: LeadP
                     <div className="flex items-center gap-3">
                         <Button asChild variant="outline" size="sm">
                             <Link href="/leads/import">⬆ Import</Link>
+                        </Button>
+                        <Button 
+                            variant="default" 
+                            size="sm"
+                            onClick={() => setAddLeadDialogOpen(true)}
+                        >
+                            + Add Lead
                         </Button>
                         <Select value={team} onValueChange={switchTeam}>
                             <SelectTrigger className="w-48">
@@ -144,35 +186,120 @@ export default function LeadPool({ pool, myLeads, archived, team, teams }: LeadP
 
                 {/* Pool tab */}
                 {activeTab === 'pool' && (
-                    <PoolTab 
-                        data={pool.data}
-                        links={pool.links}
-                        selectedLeads={selectedLeads}
-                        onSelectLead={handleSelectLead}
-                        onSelectAll={handleSelectAll}
-                        onBulkClaim={bulkClaim}
-                        bulkClaiming={bulkClaiming}
-                        selectAllRef={selectAllRef}
-                    />
+                    <>
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <input
+                                type="text"
+                                placeholder="Search by name, email, or phone..."
+                                value={poolSearch}
+                                onChange={(e) => setPoolSearch(e.target.value)}
+                                className="flex-1 px-3 py-2 border border-input bg-background rounded-md text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            />
+                            <div className="flex items-center gap-2">
+                                <label className="text-sm text-muted-foreground">Rows per page:</label>
+                                <Select value={String(poolRowsPerPage)} onValueChange={(v) => setPoolRowsPerPage(Number(v))}>
+                                    <SelectTrigger className="w-20">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="10">10</SelectItem>
+                                        <SelectItem value="20">20</SelectItem>
+                                        <SelectItem value="50">50</SelectItem>
+                                        <SelectItem value="100">100</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                        <PoolTab 
+                            data={searchContacts(pool.data, poolSearch).slice(0, poolRowsPerPage)}
+                            links={pool.links}
+                            selectedLeads={selectedLeads}
+                            onSelectLead={handleSelectLead}
+                            onSelectAll={handleSelectAll}
+                            onBulkClaim={bulkClaim}
+                            bulkClaiming={bulkClaiming}
+                            selectAllRef={selectAllRef}
+                            onEdit={handleEditContact}
+                        />
+                    </>
                 )}
 
                 {/* My Leads tab */}
                 {activeTab === 'mine' && (
-                    <MyLeadsTab 
-                        data={myLeads.data}
-                        links={myLeads.links}
-                        team={team}
-                    />
+                    <>
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <input
+                                type="text"
+                                placeholder="Search by name, email, or phone..."
+                                value={myLeadsSearch}
+                                onChange={(e) => setMyLeadsSearch(e.target.value)}
+                                className="flex-1 px-3 py-2 border border-input bg-background rounded-md text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            />
+                            <div className="flex items-center gap-2">
+                                <label className="text-sm text-muted-foreground">Rows per page:</label>
+                                <Select value={String(myLeadsRowsPerPage)} onValueChange={(v) => setMyLeadsRowsPerPage(Number(v))}>
+                                    <SelectTrigger className="w-20">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="10">10</SelectItem>
+                                        <SelectItem value="20">20</SelectItem>
+                                        <SelectItem value="50">50</SelectItem>
+                                        <SelectItem value="100">100</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                        <MyLeadsTab 
+                            data={searchContacts(myLeads.data, myLeadsSearch).slice(0, myLeadsRowsPerPage)}
+                            links={myLeads.links}
+                            team={team}
+                            onEdit={handleEditContact}
+                        />
+                    </>
                 )}
 
                 {/* Archive tab */}
                 {activeTab === 'archive' && (
-                    <ArchiveTab 
-                        data={archived.data}
-                        links={archived.links}
-                    />
+                    <>
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <input
+                                type="text"
+                                placeholder="Search by name, email, or phone..."
+                                value={archiveSearch}
+                                onChange={(e) => setArchiveSearch(e.target.value)}
+                                className="flex-1 px-3 py-2 border border-input bg-background rounded-md text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            />
+                            <div className="flex items-center gap-2">
+                                <label className="text-sm text-muted-foreground">Rows per page:</label>
+                                <Select value={String(archiveRowsPerPage)} onValueChange={(v) => setArchiveRowsPerPage(Number(v))}>
+                                    <SelectTrigger className="w-20">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="10">10</SelectItem>
+                                        <SelectItem value="20">20</SelectItem>
+                                        <SelectItem value="50">50</SelectItem>
+                                        <SelectItem value="100">100</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                        <ArchiveTab 
+                            data={searchContacts(archived.data, archiveSearch).slice(0, archiveRowsPerPage)}
+                            links={archived.links}
+                        />
+                    </>
                 )}
             </div>
+
+            {/* Add Lead Dialog */}
+            <AddLeadDialog
+                open={addLeadDialogOpen}
+                onClose={handleCloseDialog}
+                team={team}
+                contact={editingContact}
+            />
         </AppLayout>
     );
 }

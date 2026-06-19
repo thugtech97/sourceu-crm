@@ -22,6 +22,7 @@ export type DispositionOption = {
     color: string;
     needsReason?: boolean;
     needsAccountName?: boolean;
+    needsArchiveReason?: boolean;
 };
 
 export type CallTranscript = {

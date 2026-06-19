@@ -32,13 +32,18 @@ class LeadPoolController extends Controller
             ->where('pool_team', $team)
             ->where('pool_assigned_to', $userId)
             ->whereNull('archived_at')
-            ->whereIn('disposition', [Contact::DISPOSITION_NEW_LEAD, Contact::DISPOSITION_RECYCLED])
+            ->whereIn('disposition', [
+                Contact::DISPOSITION_NEW_LEAD,
+                Contact::DISPOSITION_RECYCLED,
+                Contact::DISPOSITION_MEETING_BOOKED,
+                Contact::DISPOSITION_WARM_EMAIL,
+            ])
             ->latest('pool_assigned_at');
 
         $archivedQuery = Contact::query()
             ->with(['account:id,name', 'archivedBy:id,name'])
             ->where('pool_team', $team)
-            ->where('pool_assigned_to', $userId)
+            ->where('archived_by', $userId)
             ->whereNotNull('archived_at')
             ->latest('archived_at');
 
@@ -102,11 +107,15 @@ class LeadPoolController extends Controller
             'disposition' => ['required', Rule::in([
                 Contact::DISPOSITION_OPPORTUNITY,
                 Contact::DISPOSITION_WARM_EMAIL,
-                Contact::DISPOSITION_DNC,
                 Contact::DISPOSITION_HANDOFF_TO_SALES,
                 Contact::DISPOSITION_MEETING_BOOKED,
+                'archive',
             ])],
-            'reason' => ['nullable', 'string', 'max:500'],
+            'archive_reason' => [
+                $request->input('disposition') === 'archive' ? 'required' : 'nullable',
+                'string',
+                'max:500',
+            ],
             'account_name' => [
                 $request->input('disposition') === Contact::DISPOSITION_OPPORTUNITY ? 'required' : 'nullable',
                 'string',
@@ -122,12 +131,28 @@ class LeadPoolController extends Controller
             return to_route('deals.edit', $deal)->with('status', 'Lead converted to opportunity.');
         }
 
-        match ($data['disposition']) {
-            Contact::DISPOSITION_DNC => $this->router->markDnc($contact, $user, $data['reason'] ?? null),
-            Contact::DISPOSITION_HANDOFF_TO_SALES => $this->router->handoffToSales($contact, $user),
-            Contact::DISPOSITION_WARM_EMAIL => $this->router->enrollInWarmEmail($contact),
-            Contact::DISPOSITION_MEETING_BOOKED => $this->router->bookMeeting($contact, $user),
-        };
+        if ($data['disposition'] === 'archive') {
+            $contact->update([
+                'archived_at' => now(),
+                'archive_reason' => $data['archive_reason'],
+                'archived_by' => $user->id,
+                'pool_assigned_to' => null,
+                'pool_assigned_at' => null,
+                'pool_expires_at' => null,
+            ]);
+
+            return to_route('leads.pool.index')->with('status', 'Lead archived.');
+        }
+
+        if ($data['disposition'] === Contact::DISPOSITION_HANDOFF_TO_SALES) {
+            $this->router->handoffToSales($contact, $user);
+        } elseif ($data['disposition'] === Contact::DISPOSITION_WARM_EMAIL) {
+            // Keep in My Leads with warm_email disposition
+            $contact->update(['disposition' => Contact::DISPOSITION_WARM_EMAIL]);
+        } elseif ($data['disposition'] === Contact::DISPOSITION_MEETING_BOOKED) {
+            // Keep in My Leads with meeting_booked disposition
+            $contact->update(['disposition' => Contact::DISPOSITION_MEETING_BOOKED]);
+        }
 
         return to_route('leads.pool.index')->with('status', 'Lead updated.');
     }
@@ -166,15 +191,62 @@ class LeadPoolController extends Controller
 
     public function restore(Request $request, Contact $contact): RedirectResponse
     {
-        abort_unless($contact->pool_assigned_to === $request->user()->id, 403);
+        abort_unless($contact->archived_by === $request->user()->id, 403);
 
         $contact->update([
             'archived_at' => null,
             'archive_reason' => null,
+            'archived_by' => null,
+            'pool_assigned_to' => $request->user()->id,
             'pool_assigned_at' => now(),
             'pool_expires_at' => now()->addHours(24),
         ]);
 
         return to_route('leads.pool.index')->with('status', 'Lead restored to pool successfully.');
+    }
+
+    public function addManually(Request $request): RedirectResponse
+    {
+        $team = $request->string('team', Contact::TEAM_SALES)->toString();
+
+        $validated = $request->validate([
+            'first_name' => ['required', 'string', 'max:255'],
+            'last_name' => ['required', 'string', 'max:255'],
+            'email' => ['nullable', 'email', 'max:255', 'unique:contacts,email'],
+            'phone' => ['nullable', 'string', 'max:20'],
+            'job_title' => ['nullable', 'string', 'max:255'],
+            'notes' => ['nullable', 'string', 'max:1000'],
+            'source_type' => ['nullable', Rule::in([Contact::SOURCE_INBOUND, Contact::SOURCE_COLD])],
+        ]);
+
+        $contact = Contact::create([
+            ...$validated,
+            'owner_id' => $request->user()->id,
+            'pool_team' => $team,
+            'status' => 'lead',
+            'source_type' => $validated['source_type'] ?? Contact::SOURCE_INBOUND,
+            'disposition' => Contact::DISPOSITION_NEW_LEAD,
+        ]);
+
+        $this->router->ingest($contact, $validated['source_type'] ?? Contact::SOURCE_INBOUND);
+
+        return back()->with('status', 'Lead added to pool successfully.');
+    }
+
+    public function edit(Request $request, Contact $contact): RedirectResponse
+    {
+        $validated = $request->validate([
+            'first_name' => ['required', 'string', 'max:255'],
+            'last_name' => ['required', 'string', 'max:255'],
+            'email' => ['nullable', 'email', 'max:255', Rule::unique('contacts', 'email')->ignore($contact->id)],
+            'phone' => ['nullable', 'string', 'max:20'],
+            'job_title' => ['nullable', 'string', 'max:255'],
+            'notes' => ['nullable', 'string', 'max:1000'],
+            'source_type' => ['nullable', Rule::in([Contact::SOURCE_INBOUND, Contact::SOURCE_COLD])],
+        ]);
+
+        $contact->update($validated);
+
+        return back()->with('status', 'Lead updated successfully.');
     }
 }

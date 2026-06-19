@@ -1,5 +1,7 @@
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Link } from '@inertiajs/react';
+import { RotateCcw } from 'lucide-react';
 import { useState } from 'react';
 import { formatDateTime, initials } from './constants';
 import { RestoreDialog } from './dialogs';
@@ -51,9 +53,16 @@ function ArchivedLeadRow({ contact }: { contact: PoolContact }) {
                     </div>
                 </td>
                 <td className="px-4 py-3 text-right">
-                    <Button size="sm" onClick={() => setRestoreOpen(true)} className="bg-green-600 hover:bg-green-700">
-                        Restore
-                    </Button>
+                    <TooltipProvider delayDuration={0}>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button size="sm" variant="ghost" onClick={() => setRestoreOpen(true)} className="text-green-600 hover:text-green-700">
+                                    <RotateCcw className="size-4" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Restore lead</TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
                 </td>
             </tr>
             <RestoreDialog contact={contact} open={restoreOpen} onClose={() => setRestoreOpen(false)} />

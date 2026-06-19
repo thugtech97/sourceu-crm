@@ -87,6 +87,8 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
 
     Route::get('leads/pool', [LeadPoolController::class, 'index'])->name('leads.pool.index');
     Route::post('leads/pool/bulk-claim', [LeadPoolController::class, 'bulkClaim'])->name('leads.pool.bulk-claim');
+    Route::post('leads/pool/add', [LeadPoolController::class, 'addManually'])->name('leads.pool.add');
+    Route::put('leads/pool/{contact}/edit', [LeadPoolController::class, 'edit'])->name('leads.pool.edit');
     Route::post('leads/pool/{contact}/claim', [LeadPoolController::class, 'claim'])->name('leads.pool.claim');
     Route::patch('leads/pool/{contact}/disposition', [LeadPoolController::class, 'setDisposition'])->name('leads.pool.disposition');
     Route::patch('leads/pool/{contact}/release', [LeadPoolController::class, 'release'])->name('leads.pool.release');

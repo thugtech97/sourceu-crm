@@ -21,6 +21,7 @@ class ContactController extends Controller
         return Inertia::render('crm/contacts/index', [
             'contacts' => Contact::query()
                 ->with('account:id,name')
+                ->where('disposition', Contact::DISPOSITION_OPPORTUNITY)
                 ->when($search, function ($query) use ($search) {
                     $query->where(function ($query) use ($search) {
                         $query->where('first_name', 'like', "%{$search}%")
