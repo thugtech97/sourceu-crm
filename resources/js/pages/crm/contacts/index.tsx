@@ -3,10 +3,11 @@ import FlashAlert from '@/components/flash-alert';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { LoaderCircle, Phone } from 'lucide-react';
+import { LoaderCircle, Pencil, Phone, Trash2 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Contacts', href: '/contacts' }];
@@ -163,19 +164,40 @@ export default function ContactsIndex({ contacts, filters }: Props) {
                                             </div>
                                         </td>
                                         <td className="px-4 py-3">
-                                            <div className="flex justify-end gap-1.5">
-                                                {contact.phone && (
-                                                    <Button variant="ghost" size="sm" className="size-8 p-0" disabled={dialingContactId === contact.id} onClick={() => dial(contact)}>
-                                                        {dialingContactId === contact.id
-                                                            ? <LoaderCircle className="size-4 animate-spin" />
-                                                            : <Phone className="size-4" />}
-                                                    </Button>
-                                                )}
-                                                <Button asChild variant="outline" size="sm">
-                                                    <Link href={`/contacts/${contact.id}/edit`}>Edit</Link>
-                                                </Button>
-                                                <Button variant="destructive" size="sm" onClick={() => setDeleting(contact)}>Delete</Button>
-                                            </div>
+                                            <TooltipProvider delayDuration={0}>
+                                                <div className="flex justify-end gap-1">
+                                                    {contact.phone && (
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button variant="ghost" size="sm" disabled={dialingContactId === contact.id} onClick={() => dial(contact)}>
+                                                                    {dialingContactId === contact.id
+                                                                        ? <LoaderCircle className="size-4 animate-spin" />
+                                                                        : <Phone className="size-4" />}
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>Call</TooltipContent>
+                                                        </Tooltip>
+                                                    )}
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button variant="ghost" size="sm" asChild>
+                                                                <Link href={`/contacts/${contact.id}/edit`}>
+                                                                    <Pencil className="size-4" />
+                                                                </Link>
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>Edit</TooltipContent>
+                                                    </Tooltip>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button variant="ghost" size="sm" onClick={() => setDeleting(contact)}>
+                                                                <Trash2 className="size-4" />
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>Delete</TooltipContent>
+                                                    </Tooltip>
+                                                </div>
+                                            </TooltipProvider>
                                         </td>
                                     </tr>
                                 );

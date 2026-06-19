@@ -2,10 +2,11 @@ import ConfirmDialog from '@/components/confirm-dialog';
 import FlashAlert from '@/components/flash-alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
-import { Kanban } from 'lucide-react';
+import { Kanban, Pencil, Trash2 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Deals', href: '/deals' }];
@@ -146,12 +147,28 @@ export default function DealsIndex({ deals, filters }: Props) {
                                         <span className="text-muted-foreground">{deal.expected_close_date ?? '—'}</span>
                                     </td>
                                     <td className="px-4 py-3">
-                                        <div className="flex justify-end gap-1.5">
-                                            <Button asChild variant="outline" size="sm">
-                                                <Link href={`/deals/${deal.id}/edit`}>Edit</Link>
-                                            </Button>
-                                            <Button variant="destructive" size="sm" onClick={() => setDeleting(deal)}>Delete</Button>
-                                        </div>
+                                        <TooltipProvider delayDuration={0}>
+                                            <div className="flex justify-end gap-1">
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <Button variant="ghost" size="sm" asChild>
+                                                            <Link href={`/deals/${deal.id}/edit`}>
+                                                                <Pencil className="size-4" />
+                                                            </Link>
+                                                        </Button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>Edit</TooltipContent>
+                                                </Tooltip>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <Button variant="ghost" size="sm" onClick={() => setDeleting(deal)}>
+                                                            <Trash2 className="size-4" />
+                                                        </Button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>Delete</TooltipContent>
+                                                </Tooltip>
+                                            </div>
+                                        </TooltipProvider>
                                     </td>
                                 </tr>
                             ))}

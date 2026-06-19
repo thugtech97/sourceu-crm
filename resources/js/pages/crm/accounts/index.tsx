@@ -2,9 +2,11 @@ import ConfirmDialog from '@/components/confirm-dialog';
 import FlashAlert from '@/components/flash-alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
+import { Pencil, Trash2 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Accounts', href: '/accounts' }];
@@ -107,14 +109,28 @@ export default function AccountsIndex({ accounts, filters }: Props) {
                                         <td className="px-4 py-3">{account.contacts_count}</td>
                                         <td className="px-4 py-3">{account.deals_count}</td>
                                         <td className="px-4 py-3">
-                                            <div className="flex justify-end gap-2">
-                                                <Button asChild variant="outline" size="sm">
-                                                    <Link href={`/accounts/${account.id}/edit`}>Edit</Link>
-                                                </Button>
-                                                <Button variant="destructive" size="sm" onClick={() => setDeleting(account)}>
-                                                    Delete
-                                                </Button>
-                                            </div>
+                                            <TooltipProvider delayDuration={0}>
+                                                <div className="flex justify-end gap-1">
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button variant="ghost" size="sm" asChild>
+                                                                <Link href={`/accounts/${account.id}/edit`}>
+                                                                    <Pencil className="size-4" />
+                                                                </Link>
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>Edit</TooltipContent>
+                                                    </Tooltip>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button variant="ghost" size="sm" onClick={() => setDeleting(account)}>
+                                                                <Trash2 className="size-4" />
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>Delete</TooltipContent>
+                                                    </Tooltip>
+                                                </div>
+                                            </TooltipProvider>
                                         </td>
                                     </tr>
                                 ))}
