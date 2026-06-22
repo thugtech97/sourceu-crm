@@ -139,10 +139,15 @@ class LeadRoutingService
     /**
      * Convert a lead to an opportunity (Salesforce-style).
      * Creates or finds an Account, creates a Deal at 'new' stage, and links everything together.
+     * Uses the contact's company_name if available, otherwise uses the provided accountName.
+     * Sets the expected_close_date to today.
      */
-    public function convertToOpportunity(Contact $contact, User $rep, string $accountName): Deal
+    public function convertToOpportunity(Contact $contact, User $rep): Deal
     {
-        return DB::transaction(function () use ($contact, $rep, $accountName) {
+        return DB::transaction(function () use ($contact, $rep) {
+            // Company name is required when creating a lead, so it should always be present
+            $accountName = $contact->company_name;
+
             $account = Account::firstOrCreate(
                 ['owner_id' => $rep->id, 'name' => $accountName],
             );
@@ -162,6 +167,7 @@ class LeadRoutingService
                 'account_id' => $account->id,
                 'name' => "{$contact->name} — {$accountName}",
                 'stage' => Deal::STAGE_NEW,
+                'expected_close_date' => today(),
                 'value' => 0,
                 'probability' => 20,
             ]);

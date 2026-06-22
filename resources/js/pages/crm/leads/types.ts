@@ -3,6 +3,8 @@ export type PoolContact = {
     name: string;
     email: string | null;
     phone: string | null;
+    job_title: string | null;
+    company_name: string | null;
     source_type: string;
     disposition: string;
     pool_assigned_at: string | null;
@@ -44,4 +46,5 @@ export type LeadPoolProps = {
     archived: { data: PoolContact[]; links: PaginationLink[] };
     team: string;
     teams: { value: string; label: string }[];
+    accounts: { id: number; name: string }[];
 };

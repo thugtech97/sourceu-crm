@@ -92,6 +92,7 @@ class LeadImportController extends Controller
                 ['value' => 'email', 'label' => 'Email'],
                 ['value' => 'phone', 'label' => 'Phone'],
                 ['value' => 'job_title', 'label' => 'Job Title'],
+                ['value' => 'company_name', 'label' => 'Company Name'],
                 ['value' => 'status', 'label' => 'Status'],
                 ['value' => 'pool_team', 'label' => 'Pool Team'],
                 ['value' => 'notes', 'label' => 'Notes'],
@@ -200,6 +201,7 @@ class LeadImportController extends Controller
             'email',
             'phone',
             'job_title',
+            'company_name',
             'status',
             'notes',
             'source_type',
@@ -207,8 +209,8 @@ class LeadImportController extends Controller
         ];
 
         $sampleData = [
-            ['John', 'Prospect', 'john@prospect.com', '+639171234567', 'Manager', 'lead', 'Qualified lead', 'inbound', 'sales'],
-            ['Jane', 'Lead', 'jane@prospect.com', '+639181234567', 'Owner', 'prospect', 'Warm contact', 'cold', 'cold_calling'],
+            ['John', 'Prospect', 'john@prospect.com', '+639171234567', 'Manager', 'Tech Corp', 'lead', 'Qualified lead', 'inbound', 'sales'],
+            ['Jane', 'Lead', 'jane@prospect.com', '+639181234567', 'Owner', 'Innovation Inc', 'prospect', 'Warm contact', 'cold', 'cold_calling'],
         ];
 
         return response()->streamDownload(function () use ($headers, $sampleData) {
@@ -236,6 +238,7 @@ class LeadImportController extends Controller
             'email',
             'phone',
             'job_title',
+            'company_name',
             'status',
             'notes',
             'source_type',
@@ -250,8 +253,8 @@ class LeadImportController extends Controller
 
         // Add sample data
         $sampleData = [
-            ['John', 'Prospect', 'john@prospect.com', '+639171234567', 'Manager', 'lead', 'Qualified lead', 'inbound', 'sales'],
-            ['Jane', 'Lead', 'jane@prospect.com', '+639181234567', 'Owner', 'prospect', 'Warm contact', 'cold', 'cold_calling'],
+            ['John', 'Prospect', 'john@prospect.com', '+639171234567', 'Manager', 'Tech Corp', 'lead', 'Qualified lead', 'inbound', 'sales'],
+            ['Jane', 'Lead', 'jane@prospect.com', '+639181234567', 'Owner', 'Innovation Inc', 'prospect', 'Warm contact', 'cold', 'cold_calling'],
         ];
 
         foreach ($sampleData as $rowIndex => $row) {

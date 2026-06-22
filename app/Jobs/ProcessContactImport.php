@@ -147,6 +147,7 @@ class ProcessContactImport implements ShouldQueue
             'email' => ! empty($data['email']) ? trim($data['email']) : null,
             'phone' => ! empty($data['phone']) ? trim($data['phone']) : null,
             'job_title' => ! empty($data['job_title']) ? trim($data['job_title']) : null,
+            'company_name' => ! empty($data['company_name']) ? trim($data['company_name']) : null,
             'status' => $data['status'],
             'pool_team' => ! empty($data['pool_team']) ? trim($data['pool_team']) : null,
             'notes' => ! empty($data['notes']) ? trim($data['notes']) : null,

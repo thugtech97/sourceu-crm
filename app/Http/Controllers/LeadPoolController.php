@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Account;
 use App\Models\Contact;
 use App\Services\LeadRoutingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -56,6 +58,10 @@ class LeadPoolController extends Controller
                 ['value' => Contact::TEAM_SALES, 'label' => 'Inbound Sales'],
                 ['value' => Contact::TEAM_COLD_CALLING, 'label' => 'Cold Calling'],
             ],
+            'accounts' => Account::query()
+                ->where('owner_id', $userId)
+                ->orderBy('name')
+                ->get(['id', 'name']),
         ]);
     }
 
@@ -116,17 +122,19 @@ class LeadPoolController extends Controller
                 'string',
                 'max:500',
             ],
-            'account_name' => [
-                $request->input('disposition') === Contact::DISPOSITION_OPPORTUNITY ? 'required' : 'nullable',
-                'string',
-                'max:255',
-            ],
         ]);
+
+        // Ensure contact has company_name before converting to opportunity
+        if ($data['disposition'] === Contact::DISPOSITION_OPPORTUNITY && ! $contact->company_name) {
+            throw ValidationException::withMessages([
+                'company_name' => 'Contact must have a company name to convert to opportunity. Please add company information to the lead first.',
+            ]);
+        }
 
         $user = $request->user();
 
         if ($data['disposition'] === Contact::DISPOSITION_OPPORTUNITY) {
-            $deal = $this->router->convertToOpportunity($contact, $user, $data['account_name']);
+            $deal = $this->router->convertToOpportunity($contact, $user);
 
             return to_route('deals.edit', $deal)->with('status', 'Lead converted to opportunity.');
         }
@@ -215,6 +223,7 @@ class LeadPoolController extends Controller
             'email' => ['nullable', 'email', 'max:255', 'unique:contacts,email'],
             'phone' => ['nullable', 'string', 'max:20'],
             'job_title' => ['nullable', 'string', 'max:255'],
+            'company_name' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string', 'max:1000'],
             'source_type' => ['nullable', Rule::in([Contact::SOURCE_INBOUND, Contact::SOURCE_COLD])],
         ]);
@@ -241,6 +250,7 @@ class LeadPoolController extends Controller
             'email' => ['nullable', 'email', 'max:255', Rule::unique('contacts', 'email')->ignore($contact->id)],
             'phone' => ['nullable', 'string', 'max:20'],
             'job_title' => ['nullable', 'string', 'max:255'],
+            'company_name' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string', 'max:1000'],
             'source_type' => ['nullable', Rule::in([Contact::SOURCE_INBOUND, Contact::SOURCE_COLD])],
         ]);

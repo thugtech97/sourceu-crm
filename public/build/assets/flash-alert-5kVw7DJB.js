@@ -1,1 +1,0 @@
-import{K as t,j as s}from"./app-kpVKDn1x.js";import{A as e,C as a,a as i}from"./alert-B1_JVrX_.js";function c(){const{flash:r}=t().props;return r.status?s.jsxs(e,{variant:"success",children:[s.jsx(a,{className:"size-4"}),s.jsx(i,{children:r.status})]}):null}export{c as F};
