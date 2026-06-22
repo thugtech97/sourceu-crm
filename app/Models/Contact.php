@@ -50,6 +50,7 @@ class Contact extends Model implements Auditable
         'phone',
         'dialpad_contact_id',
         'job_title',
+        'company_name',
         'status',
         'notes',
         'source_type',

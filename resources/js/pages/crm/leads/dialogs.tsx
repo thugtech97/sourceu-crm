@@ -237,18 +237,16 @@ export function RestoreDialog({ contact, open, onClose }: { contact: PoolContact
 
 export function DispositionDialog({ contact, team, open, onClose }: { contact: PoolContact; team: string; open: boolean; onClose: () => void }) {
     const options = team === 'cold_calling' ? COLD_DISPOSITIONS : INBOUND_DISPOSITIONS;
-    const { data, setData, patch, processing } = useForm({ disposition: '', archive_reason: '', account_name: '' });
+    const { data, setData, patch, processing } = useForm({ disposition: '', archive_reason: '' });
     const selected = options.find((o) => o.value === data.disposition);
 
     const isValid = data.disposition &&
-        (!selected?.needsAccountName || data.account_name.trim()) &&
         (!selected?.needsArchiveReason || data.archive_reason.trim()) &&
         !processing;
 
     function submit() {
         const payload = {
             disposition: data.disposition,
-            ...(data.account_name && { account_name: data.account_name }),
             ...(data.archive_reason && { archive_reason: data.archive_reason }),
         };
         patch(`/leads/pool/${contact.id}/disposition`, { 
@@ -276,18 +274,6 @@ export function DispositionDialog({ contact, team, open, onClose }: { contact: P
                             ))}
                         </SelectContent>
                     </Select>
-                    {selected?.needsAccountName && (
-                        <div className="grid gap-1.5">
-                            <label className="text-sm font-medium">Company / Account name</label>
-                            <input
-                                className="border-input placeholder:text-muted-foreground flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs"
-                                placeholder="e.g. Acme Corp"
-                                value={data.account_name}
-                                onChange={(e) => setData('account_name', e.target.value)}
-                                autoFocus
-                            />
-                        </div>
-                    )}
                     {selected?.needsArchiveReason && (
                         <div className="grid gap-1.5">
                             <label className="text-sm font-medium">Archive reason</label>

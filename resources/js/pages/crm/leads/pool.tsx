@@ -13,7 +13,7 @@ import type { LeadPoolProps } from './types';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Lead Pool', href: '/leads/pool' }];
 
-export default function LeadPool({ pool, myLeads, archived, team, teams }: LeadPoolProps) {
+export default function LeadPool({ pool, myLeads, archived, team, teams, accounts }: LeadPoolProps) {
     const [activeTab, setActiveTab] = useState<'pool' | 'mine' | 'archive'>('pool');
     const [selectedLeads, setSelectedLeads] = useState<Set<number>>(new Set());
     const [bulkClaiming, setBulkClaiming] = useState(false);
@@ -299,6 +299,7 @@ export default function LeadPool({ pool, myLeads, archived, team, teams }: LeadP
                 onClose={handleCloseDialog}
                 team={team}
                 contact={editingContact}
+                accounts={accounts}
             />
         </AppLayout>
     );
