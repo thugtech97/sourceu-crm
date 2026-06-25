@@ -61,6 +61,7 @@ class Deal extends Model implements Auditable
         'account_id',
         'contact_id',
         'name',
+        'record_type',
         'stage',
         'meeting_booked_at',
         'meeting_outcome',

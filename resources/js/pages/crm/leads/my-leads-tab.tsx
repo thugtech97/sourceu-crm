@@ -1,12 +1,13 @@
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import ConfirmDialog from '@/components/confirm-dialog';
-import { Link, router } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { AlertTriangle, Clock, MessageSquare, Pencil, Phone, RefreshCw, UserCheck } from 'lucide-react';
 import { useState } from 'react';
 import { initials, timeLeft } from './constants';
 import { DispositionDialog, TranscriptModal } from './dialogs';
 import type { PoolContact, PaginationLink } from './types';
+import type { SharedData } from '@/types';
 
 function MyLeadRow({ contact, team, onEdit }: { contact: PoolContact; team: string; onEdit: (contact: PoolContact) => void }) {
     const [dispositionOpen, setDispositionOpen] = useState(false);

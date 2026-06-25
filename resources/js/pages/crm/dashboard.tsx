@@ -89,7 +89,7 @@ export default function CrmDashboard({ stats, dealsByStage, recentContacts, rece
     const kpiCards = [
         { label: 'Pipeline value', value: money.format(stats.pipelineValue), icon: BriefcaseBusiness, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-950' },
         { label: 'Won', value: money.format(stats.wonValue), icon: DollarSign, color: 'text-green-600', bg: 'bg-green-50 dark:bg-green-950' },
-        { label: 'Open deals', value: stats.openDeals.toLocaleString(), icon: Handshake, color: 'text-purple-600', bg: 'bg-purple-50 dark:bg-purple-950' },
+        { label: 'Open opportunities', value: stats.openDeals.toLocaleString(), icon: Handshake, color: 'text-purple-600', bg: 'bg-purple-50 dark:bg-purple-950' },
         { label: 'Pool leads', value: stats.poolLeads.toLocaleString(), icon: PhoneIncoming, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-950' },
         { label: 'Warm email', value: stats.warmEmail.toLocaleString(), icon: Mail, color: 'text-orange-600', bg: 'bg-orange-50 dark:bg-orange-950' },
         { label: 'Contacts', value: stats.contacts.toLocaleString(), icon: Users, color: 'text-slate-600', bg: 'bg-slate-50 dark:bg-slate-800' },
@@ -112,7 +112,7 @@ export default function CrmDashboard({ stats, dealsByStage, recentContacts, rece
                             <Link href="/contacts/create">New contact</Link>
                         </Button>
                         <Button asChild size="sm">
-                            <Link href="/deals/create">New deal</Link>
+                            <Link href="/deals/create">New opportunity</Link>
                         </Button>
                     </div>
                 </div>
@@ -145,7 +145,7 @@ export default function CrmDashboard({ stats, dealsByStage, recentContacts, rece
                             </Button>
                         </div>
                         {dealsByStage.length === 0 ? (
-                            <p className="text-muted-foreground p-4 text-sm">No open deals yet.</p>
+                            <p className="text-muted-foreground p-4 text-sm">No open opportunities yet.</p>
                         ) : (
                             <div className="divide-y">
                                 {STAGE_ORDER.filter((s) => stageMap[s]).map((stage) => {
@@ -158,7 +158,7 @@ export default function CrmDashboard({ stats, dealsByStage, recentContacts, rece
                                                     {stageLabel(stage)}
                                                 </span>
                                                 <div className="flex items-center gap-2 text-xs">
-                                                    <span className="text-muted-foreground">{row.count} deals</span>
+                                                    <span className="text-muted-foreground">{row.count} opportunities</span>
                                                     <span className="font-medium">{money.format(Number(row.total))}</span>
                                                 </div>
                                             </div>
@@ -204,13 +204,13 @@ export default function CrmDashboard({ stats, dealsByStage, recentContacts, rece
                     {/* Recent deals */}
                     <section className="bg-card rounded-xl border shadow-xs">
                         <div className="flex items-center justify-between border-b px-4 py-3">
-                            <h2 className="font-semibold">Recent deals</h2>
+                            <h2 className="font-semibold">Recent opportunities</h2>
                             <Button asChild variant="ghost" size="sm">
                                 <Link href="/deals">View all</Link>
                             </Button>
                         </div>
                         <div className="divide-y">
-                            {recentDeals.length === 0 && <p className="text-muted-foreground p-4 text-sm">No deals yet.</p>}
+                            {recentDeals.length === 0 && <p className="text-muted-foreground p-4 text-sm">No opportunities yet.</p>}
                             {recentDeals.map((deal) => (
                                 <Link key={deal.id} href={`/deals/${deal.id}/edit`} className="hover:bg-muted/40 flex items-center gap-3 px-4 py-3 transition-colors">
                                     <div className="min-w-0 flex-1">

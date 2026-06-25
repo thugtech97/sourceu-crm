@@ -1,7 +1,7 @@
 import type { DispositionOption } from './types';
 
 export const INBOUND_DISPOSITIONS: DispositionOption[] = [
-    { value: 'opportunity',       label: 'Convert to opportunity', color: 'text-green-700' },
+    { value: 'opportunity',       label: 'Convert to opportunity', color: 'text-green-700', needsAccountName: true },
     { value: 'meeting_booked',    label: 'Meeting booked',         color: 'text-blue-700' },
     { value: 'warm_email',        label: 'Warm email nurture',     color: 'text-orange-700' },
     { value: 'archive',           label: 'Archive',                color: 'text-amber-700', needsArchiveReason: true },

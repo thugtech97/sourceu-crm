@@ -2,31 +2,46 @@ import FlashAlert from '@/components/flash-alert';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
-import { Head, Link, router, useForm } from '@inertiajs/react';
-import { useState, useRef } from 'react';
+import { type BreadcrumbItem, type SharedData } from '@/types';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { useState, useRef, useEffect } from 'react';
 import { ArchiveTab } from './archive-tab';
 import { MyLeadsTab } from './my-leads-tab';
 import { PoolTab } from './pool-tab';
 import AddLeadDialog from './add-lead-dialog';
-import type { LeadPoolProps } from './types';
+import { ConvertToOpportunityDialog } from './convert-to-opportunity-dialog';
+import type { LeadPoolProps, PoolContact } from './types';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Lead Pool', href: '/leads/pool' }];
 
-export default function LeadPool({ pool, myLeads, archived, team, teams, accounts }: LeadPoolProps) {
+export default function LeadPool({ pool, myLeads, archived, team, teams, accounts, businessUnits }: LeadPoolProps) {
+    const { flash, auth } = usePage<SharedData>().props;
+    const openConvertWizardId = flash.open_convert_wizard;
+
+    const foundContact = openConvertWizardId
+        ? (myLeads.data.find((c) => c.id === openConvertWizardId) || pool.data.find((c) => c.id === openConvertWizardId))
+        : null;
+
+    const wizardContact = foundContact || (openConvertWizardId ? { id: openConvertWizardId } as PoolContact : null);
+
     const [activeTab, setActiveTab] = useState<'pool' | 'mine' | 'archive'>('pool');
     const [selectedLeads, setSelectedLeads] = useState<Set<number>>(new Set());
     const [bulkClaiming, setBulkClaiming] = useState(false);
     const [addLeadDialogOpen, setAddLeadDialogOpen] = useState(false);
     const [editingContact, setEditingContact] = useState<any | null>(null);
+    const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (toastMessage) {
+            const timer = setTimeout(() => setToastMessage(null), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [toastMessage]);
     
     // Search and rows per page for each tab
     const [poolSearch, setPoolSearch] = useState('');
-    const [poolRowsPerPage, setPoolRowsPerPage] = useState(20);
     const [myLeadsSearch, setMyLeadsSearch] = useState('');
-    const [myLeadsRowsPerPage, setMyLeadsRowsPerPage] = useState(20);
     const [archiveSearch, setArchiveSearch] = useState('');
-    const [archiveRowsPerPage, setArchiveRowsPerPage] = useState(20);
     
     const selectAllRef = useRef<HTMLInputElement>(null);
     const { post } = useForm();
@@ -197,7 +212,12 @@ export default function LeadPool({ pool, myLeads, archived, team, teams, account
                             />
                             <div className="flex items-center gap-2">
                                 <label className="text-sm text-muted-foreground">Rows per page:</label>
-                                <Select value={String(poolRowsPerPage)} onValueChange={(v) => setPoolRowsPerPage(Number(v))}>
+                                <Select defaultValue="20" onValueChange={(v) => {
+                                    const url = new URLSearchParams(window.location.search);
+                                    url.set('per_page', v);
+                                    url.delete('pool_page');
+                                    router.get(window.location.pathname + '?' + url.toString(), {}, { preserveState: true });
+                                }}>
                                     <SelectTrigger className="w-20">
                                         <SelectValue />
                                     </SelectTrigger>
@@ -211,7 +231,7 @@ export default function LeadPool({ pool, myLeads, archived, team, teams, account
                             </div>
                         </div>
                         <PoolTab 
-                            data={searchContacts(pool.data, poolSearch).slice(0, poolRowsPerPage)}
+                            data={searchContacts(pool.data, poolSearch)}
                             links={pool.links}
                             selectedLeads={selectedLeads}
                             onSelectLead={handleSelectLead}
@@ -237,7 +257,12 @@ export default function LeadPool({ pool, myLeads, archived, team, teams, account
                             />
                             <div className="flex items-center gap-2">
                                 <label className="text-sm text-muted-foreground">Rows per page:</label>
-                                <Select value={String(myLeadsRowsPerPage)} onValueChange={(v) => setMyLeadsRowsPerPage(Number(v))}>
+                                <Select defaultValue="20" onValueChange={(v) => {
+                                    const url = new URLSearchParams(window.location.search);
+                                    url.set('per_page', v);
+                                    url.delete('my_page');
+                                    router.get(window.location.pathname + '?' + url.toString(), {}, { preserveState: true });
+                                }}>
                                     <SelectTrigger className="w-20">
                                         <SelectValue />
                                     </SelectTrigger>
@@ -251,7 +276,7 @@ export default function LeadPool({ pool, myLeads, archived, team, teams, account
                             </div>
                         </div>
                         <MyLeadsTab 
-                            data={searchContacts(myLeads.data, myLeadsSearch).slice(0, myLeadsRowsPerPage)}
+                            data={searchContacts(myLeads.data, myLeadsSearch)}
                             links={myLeads.links}
                             team={team}
                             onEdit={handleEditContact}
@@ -272,7 +297,12 @@ export default function LeadPool({ pool, myLeads, archived, team, teams, account
                             />
                             <div className="flex items-center gap-2">
                                 <label className="text-sm text-muted-foreground">Rows per page:</label>
-                                <Select value={String(archiveRowsPerPage)} onValueChange={(v) => setArchiveRowsPerPage(Number(v))}>
+                                <Select defaultValue="20" onValueChange={(v) => {
+                                    const url = new URLSearchParams(window.location.search);
+                                    url.set('per_page', v);
+                                    url.delete('archive_page');
+                                    router.get(window.location.pathname + '?' + url.toString(), {}, { preserveState: true });
+                                }}>
                                     <SelectTrigger className="w-20">
                                         <SelectValue />
                                     </SelectTrigger>
@@ -286,7 +316,7 @@ export default function LeadPool({ pool, myLeads, archived, team, teams, account
                             </div>
                         </div>
                         <ArchiveTab 
-                            data={searchContacts(archived.data, archiveSearch).slice(0, archiveRowsPerPage)}
+                            data={searchContacts(archived.data, archiveSearch)}
                             links={archived.links}
                         />
                     </>
@@ -297,10 +327,46 @@ export default function LeadPool({ pool, myLeads, archived, team, teams, account
             <AddLeadDialog
                 open={addLeadDialogOpen}
                 onClose={handleCloseDialog}
+                onSuccess={(msg) => setToastMessage(msg)}
                 team={team}
                 contact={editingContact}
                 accounts={accounts}
+                businessUnits={businessUnits}
             />
+
+            {/* Convert to Opportunity Dialog */}
+            {wizardContact && (
+                <ConvertToOpportunityDialog
+                    contact={wizardContact}
+                    open={!!wizardContact}
+                    onClose={() => {
+                        router.visit(window.location.pathname + window.location.search, {
+                            preserveScroll: true,
+                            preserveState: false,
+                        });
+                    }}
+                    currentUserName={auth.user.name}
+                />
+            )}
+
+            {/* Custom Success Toast */}
+            {toastMessage && (
+                <div className="fixed bottom-5 right-5 z-[100] flex items-center gap-3 bg-slate-900 text-white px-5 py-3.5 rounded-lg shadow-xl border border-slate-800 animate-in fade-in slide-in-from-bottom-5 duration-300">
+                    <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white animate-scale-in">
+                        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <span className="text-sm font-semibold">{toastMessage}</span>
+                    <button 
+                        onClick={() => setToastMessage(null)}
+                        className="ml-4 text-slate-400 hover:text-white transition-colors"
+                        aria-label="Dismiss toast"
+                    >
+                        ✕
+                    </button>
+                </div>
+            )}
         </AppLayout>
     );
 }

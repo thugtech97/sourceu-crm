@@ -47,6 +47,7 @@ class HandleInertiaRequests extends Middleware
             'flash' => [
                 'status' => fn () => $request->session()->get('status'),
                 'dialpad_test' => fn () => $request->session()->get('dialpad_test'),
+                'open_convert_wizard' => fn () => $request->session()->get('open_convert_wizard'),
             ],
             'auth' => [
                 'user' => $user,

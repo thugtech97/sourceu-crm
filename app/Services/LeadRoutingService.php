@@ -139,37 +139,57 @@ class LeadRoutingService
     /**
      * Convert a lead to an opportunity (Salesforce-style).
      * Creates or finds an Account, creates a Deal at 'new' stage, and links everything together.
-     * Uses the contact's company_name if available, otherwise uses the provided accountName.
-     * Sets the expected_close_date to today.
+     *
+     * @param  array<string, mixed>  $payload  Optional wizard payload with override values.
      */
-    public function convertToOpportunity(Contact $contact, User $rep): Deal
+    public function convertToOpportunity(Contact $contact, User $rep, array $payload = []): Deal
     {
-        return DB::transaction(function () use ($contact, $rep) {
-            // Company name is required when creating a lead, so it should always be present
-            $accountName = $contact->company_name;
+        return DB::transaction(function () use ($contact, $rep, $payload) {
+            // Determine account name: prefer wizard input, fall back to company_name
+            $accountName = $payload['account_name'] ?? $contact->company_name;
 
+            // Find or create Account
             $account = Account::firstOrCreate(
                 ['owner_id' => $rep->id, 'name' => $accountName],
             );
 
-            $contact->update([
-                'account_id' => $account->id,
-                'disposition' => Contact::DISPOSITION_OPPORTUNITY,
-                'converted_by' => $rep->id,
+            // Update account business_type if provided
+            if (! empty($payload['account_business_type'])) {
+                $account->update(['business_type' => $payload['account_business_type']]);
+            }
+
+            // Update contact name fields if provided
+            $contactUpdates = [
+                'account_id'       => $account->id,
+                'disposition'      => Contact::DISPOSITION_OPPORTUNITY,
+                'converted_by'     => $rep->id,
                 'pool_assigned_to' => null,
                 'pool_assigned_at' => null,
-                'pool_expires_at' => null,
-            ]);
+                'pool_expires_at'  => null,
+            ];
+            foreach (['salutation', 'first_name', 'middle_name', 'last_name', 'suffix'] as $field) {
+                if (array_key_exists($field, $payload)) {
+                    $contactUpdates[$field] = $payload[$field];
+                }
+            }
+            $contact->update($contactUpdates);
+
+            // Refresh name after contact update
+            $contact->refresh();
+
+            // Determine opportunity name: prefer wizard input, fall back to "Contact — Account"
+            $opportunityName = $payload['opportunity_name'] ?? "{$contact->name} — {$accountName}";
 
             return Deal::create([
-                'owner_id' => $rep->id,
-                'contact_id' => $contact->id,
-                'account_id' => $account->id,
-                'name' => "{$contact->name} — {$accountName}",
-                'stage' => Deal::STAGE_NEW,
+                'owner_id'            => $rep->id,
+                'contact_id'          => $contact->id,
+                'account_id'          => $account->id,
+                'name'                => $opportunityName,
+                'record_type'         => $payload['record_type'] ?? null,
+                'stage'               => Deal::STAGE_NEW,
                 'expected_close_date' => today(),
-                'value' => 0,
-                'probability' => 20,
+                'value'               => 0,
+                'probability'         => 20,
             ]);
         });
     }

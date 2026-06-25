@@ -8,8 +8,8 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import { FormEvent } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Deals', href: '/deals' },
-    { title: 'New deal', href: '/deals/create' },
+    { title: 'Opportunities', href: '/deals' },
+    { title: 'New opportunity', href: '/deals/create' },
 ];
 
 type Account = {
@@ -68,11 +68,11 @@ export default function CreateDeal({ accounts, contacts }: Props) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="New deal" />
+            <Head title="New opportunity" />
 
             <div className="max-w-3xl p-4">
                 <div className="mb-6">
-                    <h1 className="text-2xl font-semibold">New deal</h1>
+                    <h1 className="text-2xl font-semibold">New opportunity</h1>
                     <p className="text-muted-foreground text-sm">Add an opportunity to your pipeline.</p>
                 </div>
 
@@ -80,7 +80,7 @@ export default function CreateDeal({ accounts, contacts }: Props) {
                     <DealFields accounts={accounts} contacts={contacts} data={data} setData={setData} errors={errors} />
 
                     <div className="flex gap-2">
-                        <Button disabled={processing}>Create deal</Button>
+                        <Button disabled={processing}>Create opportunity</Button>
                         <Button asChild variant="outline">
                             <Link href="/deals">Cancel</Link>
                         </Button>
@@ -108,7 +108,7 @@ function DealFields({
         <>
             <div className="grid gap-4 md:grid-cols-2">
                 <div className="grid gap-2 md:col-span-2">
-                    <Label htmlFor="name">Deal name</Label>
+                    <Label htmlFor="name">Opportunity name</Label>
                     <Input id="name" value={data.name} onChange={(event) => setData('name', event.target.value)} required />
                     <InputError message={errors.name} />
                 </div>

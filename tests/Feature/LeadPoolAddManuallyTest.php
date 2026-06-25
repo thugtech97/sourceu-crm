@@ -5,13 +5,14 @@ use App\Models\User;
 
 test('authenticated user can add a lead manually to the pool', function () {
     $user = User::factory()->create(['is_approved' => true]);
-    
+
     $response = $this->actingAs($user)->post(route('leads.pool.add', ['team' => Contact::TEAM_SALES]), [
         'first_name' => 'John',
         'last_name' => 'Doe',
         'email' => 'john@example.com',
         'phone' => '+1 (555) 123-4567',
-        'job_title' => 'Sales Manager',
+        'account_name' => 'Test Account',
+        'lead_status' => 'New Lead',
         'notes' => 'Test lead',
         'source_type' => Contact::SOURCE_INBOUND,
     ]);
@@ -31,7 +32,7 @@ test('authenticated user can add a lead manually to the pool', function () {
 
 test('first name is required when adding a lead manually', function () {
     $user = User::factory()->create(['is_approved' => true]);
-    
+
     $response = $this->actingAs($user)->post(route('leads.pool.add', ['team' => Contact::TEAM_SALES]), [
         'first_name' => '',
         'last_name' => 'Doe',
@@ -43,7 +44,7 @@ test('first name is required when adding a lead manually', function () {
 
 test('last name is required when adding a lead manually', function () {
     $user = User::factory()->create(['is_approved' => true]);
-    
+
     $response = $this->actingAs($user)->post(route('leads.pool.add', ['team' => Contact::TEAM_SALES]), [
         'first_name' => 'John',
         'last_name' => '',
@@ -56,7 +57,7 @@ test('last name is required when adding a lead manually', function () {
 test('email must be unique when adding a lead manually', function () {
     $user = User::factory()->create(['is_approved' => true]);
     Contact::factory()->create(['email' => 'john@example.com']);
-    
+
     $response = $this->actingAs($user)->post(route('leads.pool.add', ['team' => Contact::TEAM_SALES]), [
         'first_name' => 'John',
         'last_name' => 'Doe',
@@ -68,7 +69,7 @@ test('email must be unique when adding a lead manually', function () {
 
 test('email must be valid when adding a lead manually', function () {
     $user = User::factory()->create(['is_approved' => true]);
-    
+
     $response = $this->actingAs($user)->post(route('leads.pool.add', ['team' => Contact::TEAM_SALES]), [
         'first_name' => 'John',
         'last_name' => 'Doe',
@@ -80,7 +81,7 @@ test('email must be valid when adding a lead manually', function () {
 
 test('source type must be valid when adding a lead manually', function () {
     $user = User::factory()->create(['is_approved' => true]);
-    
+
     $response = $this->actingAs($user)->post(route('leads.pool.add', ['team' => Contact::TEAM_SALES]), [
         'first_name' => 'John',
         'last_name' => 'Doe',
@@ -94,13 +95,14 @@ test('source type must be valid when adding a lead manually', function () {
 test('authenticated user can edit a lead', function () {
     $user = User::factory()->create(['is_approved' => true]);
     $contact = Contact::factory()->create(['first_name' => 'John', 'email' => 'john@example.com']);
-    
+
     $response = $this->actingAs($user)->put(route('leads.pool.edit', ['contact' => $contact->id]), [
         'first_name' => 'Jane',
         'last_name' => 'Doe',
         'email' => 'jane@example.com',
         'phone' => '+1 (555) 987-6543',
-        'job_title' => 'Manager',
+        'account_name' => 'Updated Account',
+        'lead_status' => 'In Progress',
         'notes' => 'Updated notes',
         'source_type' => Contact::SOURCE_COLD,
     ]);
@@ -114,9 +116,41 @@ test('authenticated user can edit a lead', function () {
         'last_name' => 'Doe',
         'email' => 'jane@example.com',
         'phone' => '+1 (555) 987-6543',
-        'job_title' => 'Manager',
         'notes' => 'Updated notes',
         'source_type' => Contact::SOURCE_COLD,
+    ]);
+});
+
+test('authenticated user can edit a lead service interest values', function () {
+    $user = User::factory()->create(['is_approved' => true]);
+    $contact = Contact::factory()->create([
+        'first_name' => 'Service',
+        'last_name' => 'Interest',
+        'email' => 'service@example.com',
+        'lead_status' => 'new',
+        'source_type' => Contact::SOURCE_INBOUND,
+    ]);
+
+    $response = $this->actingAs($user)->put(route('leads.pool.edit', ['contact' => $contact->id]), [
+        'first_name' => 'Service',
+        'last_name' => 'Interest',
+        'email' => 'service@example.com',
+        'account_name' => 'Service Account',
+        'lead_status' => 'new',
+        'source_type' => Contact::SOURCE_INBOUND,
+        'business_unit' => '7',
+        'services' => '5,6',
+        'service_description' => 'Updated interest notes',
+    ]);
+
+    $response->assertRedirect();
+    $response->assertSessionHas('status', 'Lead updated successfully.');
+
+    $this->assertDatabaseHas('contacts', [
+        'id' => $contact->id,
+        'business_unit' => '7',
+        'services' => '5,6',
+        'service_description' => 'Updated interest notes',
     ]);
 });
 
@@ -124,7 +158,7 @@ test('email must be unique when editing a lead, excluding the current contact', 
     $user = User::factory()->create(['is_approved' => true]);
     $contact1 = Contact::factory()->create(['email' => 'jane@example.com']);
     $contact2 = Contact::factory()->create(['email' => 'john@example.com']);
-    
+
     $response = $this->actingAs($user)->put(route('leads.pool.edit', ['contact' => $contact2->id]), [
         'first_name' => 'Jane',
         'last_name' => 'Doe',
@@ -137,12 +171,14 @@ test('email must be unique when editing a lead, excluding the current contact', 
 test('user can keep the same email when editing a lead', function () {
     $user = User::factory()->create(['is_approved' => true]);
     $contact = Contact::factory()->create(['email' => 'john@example.com']);
-    
+
     $response = $this->actingAs($user)->put(route('leads.pool.edit', ['contact' => $contact->id]), [
         'first_name' => 'John',
         'last_name' => 'Doe',
         'email' => 'john@example.com',  // Same email
         'phone' => '+1 (555) 123-4567',
+        'account_name' => 'Test Account',
+        'lead_status' => 'New Lead',
     ]);
 
     $response->assertRedirect();
@@ -153,4 +189,3 @@ test('user can keep the same email when editing a lead', function () {
         'email' => 'john@example.com',
     ]);
 });
-

@@ -123,6 +123,7 @@ test('user can restore an archived lead', function () {
         'disposition' => Contact::DISPOSITION_NEW_LEAD,
         'archived_at' => now()->subHours(1),
         'archive_reason' => 'not_interested',
+        'archived_by' => $user->id,
     ]);
 
     $response = $this->actingAs($user)

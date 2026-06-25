@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Account;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -10,6 +11,21 @@ use Inertia\Response;
 
 class AccountController extends Controller
 {
+    public function search(Request $request): JsonResponse
+    {
+        $query = $request->string('q')->toString();
+
+        $accounts = Account::query()
+            ->where('owner_id', $request->user()->id)
+            ->where('name', 'like', "%{$query}%")
+            ->orderBy('name')
+            ->limit(10)
+            ->select('id', 'name')
+            ->get();
+
+        return response()->json($accounts);
+    }
+
     public function index(Request $request): Response
     {
         $search = $request->string('search')->toString();

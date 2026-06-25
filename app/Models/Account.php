@@ -20,6 +20,7 @@ class Account extends Model implements Auditable
     protected $fillable = [
         'owner_id',
         'name',
+        'business_type',
         'industry',
         'website',
         'phone',

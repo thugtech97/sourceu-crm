@@ -1,0 +1,1 @@
+import{K as t,j as s}from"./app-CZoQ5Uvf.js";import{A as e,a}from"./alert-CsBNpZE1.js";import{C as i}from"./circle-check-DpxDw3im.js";function c(){const{flash:r}=t().props;return r.status?s.jsxs(e,{variant:"success",children:[s.jsx(i,{className:"size-4"}),s.jsx(a,{children:r.status})]}):null}export{c as F};

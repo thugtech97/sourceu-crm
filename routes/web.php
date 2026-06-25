@@ -4,6 +4,8 @@ use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\UserApprovalController;
 use App\Http\Controllers\Auth\PendingApprovalController;
+use App\Http\Controllers\BusinessTypeController;
+use App\Http\Controllers\BusinessUnitController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ContactImportController;
 use App\Http\Controllers\CrmDashboardController;
@@ -12,9 +14,15 @@ use App\Http\Controllers\DialpadController;
 use App\Http\Controllers\DialpadTestController;
 use App\Http\Controllers\DialpadWebhookController;
 use App\Http\Controllers\DncListController;
+use App\Http\Controllers\IndustryController;
 use App\Http\Controllers\LeadImportController;
 use App\Http\Controllers\LeadPoolController;
+use App\Http\Controllers\LeadSourceController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\ServiceInterestController;
+use App\Http\Controllers\ServiceSettingsController;
 use App\Http\Controllers\ZapierLeadWebhookController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -38,7 +46,30 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     })->name('dashboard');
 
     Route::get('crm', CrmDashboardController::class)->name('crm.dashboard');
+    Route::get('accounts/search', [AccountController::class, 'search'])->name('accounts.search');
     Route::resource('accounts', AccountController::class)->except(['show']);
+    Route::get('industries/search', [IndustryController::class, 'search'])->name('industries.search');
+    Route::post('industries', [IndustryController::class, 'store'])->name('industries.store');
+    Route::get('roles/search', [RoleController::class, 'search'])->name('roles.search');
+    Route::post('roles', [RoleController::class, 'store'])->name('roles.store');
+    Route::get('business-types/search', [BusinessTypeController::class, 'search'])->name('business-types.search');
+    Route::post('business-types', [BusinessTypeController::class, 'store'])->name('business-types.store');
+    Route::get('lead-sources/search', [LeadSourceController::class, 'search'])->name('lead-sources.search');
+    Route::post('lead-sources', [LeadSourceController::class, 'store'])->name('lead-sources.store');
+
+    // Business Units and Services API routes
+    Route::get('business-units', [BusinessUnitController::class, 'index'])->name('business-units.index');
+    Route::post('business-units', [BusinessUnitController::class, 'store'])->name('business-units.store');
+    Route::delete('business-units/{businessUnit}', [BusinessUnitController::class, 'destroy'])->name('business-units.destroy');
+    Route::get('business-units/{businessUnit}/services', [BusinessUnitController::class, 'services'])->name('business-units.services');
+    Route::post('services', [ServiceController::class, 'store'])->name('services.store');
+    Route::delete('services/{service}', [ServiceController::class, 'destroy'])->name('services.destroy');
+
+    // Service Interests routes
+    Route::get('contacts/{contact}/service-interests', [ServiceInterestController::class, 'index'])->name('service-interests.index');
+    Route::post('contacts/{contact}/service-interests', [ServiceInterestController::class, 'store'])->name('service-interests.store');
+    Route::delete('contacts/{contact}/service-interests/{serviceId}', [ServiceInterestController::class, 'destroy'])->name('service-interests.destroy');
+
     Route::post('contacts/{contact}/dialpad/dial', [DialpadController::class, 'dial'])->name('contacts.dialpad.dial');
     Route::get('contacts/{contact}/dialpad/transcripts', [DialpadController::class, 'getCallTranscripts'])->name('contacts.dialpad.transcripts');
     Route::resource('contacts', ContactController::class)->except(['show']);
@@ -94,6 +125,8 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     Route::patch('leads/pool/{contact}/release', [LeadPoolController::class, 'release'])->name('leads.pool.release');
     Route::patch('leads/pool/{contact}/archive', [LeadPoolController::class, 'archive'])->name('leads.pool.archive');
     Route::patch('leads/pool/{contact}/restore', [LeadPoolController::class, 'restore'])->name('leads.pool.restore');
+    Route::get('leads/pool/{contact}/conversion-data', [LeadPoolController::class, 'conversionData'])->name('leads.pool.conversion-data');
+    Route::post('leads/pool/{contact}/convert', [LeadPoolController::class, 'convertFromWizard'])->name('leads.pool.convert');
 
     // Lead import routes
     Route::get('leads/import', [LeadImportController::class, 'index'])->name('leads.import.index');
@@ -117,6 +150,7 @@ Route::middleware(['auth', 'verified', 'approved', 'admin'])
         Route::patch('users/{user}/approve', [UserApprovalController::class, 'approve'])->name('users.approve');
         Route::delete('users/{user}', [UserApprovalController::class, 'destroy'])->name('users.destroy');
         Route::get('audit-log', AuditLogController::class)->name('audit-log');
+        Route::get('service-settings', [ServiceSettingsController::class, 'index'])->name('service-settings');
     });
 
 require __DIR__.'/settings.php';
