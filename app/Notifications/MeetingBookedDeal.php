@@ -10,9 +10,7 @@ class MeetingBookedDeal extends Notification
 {
     use Queueable;
 
-    public function __construct(private readonly Deal $deal)
-    {
-    }
+    public function __construct(private readonly Deal $deal) {}
 
     public function via(object $notifiable): array
     {

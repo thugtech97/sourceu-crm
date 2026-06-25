@@ -3,13 +3,14 @@ import FlashAlert from '@/components/flash-alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { formatDate } from '@/lib/utils';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import { Kanban, Pencil, Trash2 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
-const breadcrumbs: BreadcrumbItem[] = [{ title: 'Deals', href: '/deals' }];
+const breadcrumbs: BreadcrumbItem[] = [{ title: 'Opportunities', href: '/deals' }];
 
 const STAGE_STYLES: Record<string, string> = {
     new:               'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
@@ -68,12 +69,12 @@ export default function DealsIndex({ deals, filters }: Props) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Deals" />
+            <Head title="Opportunities" />
 
             <div className="flex flex-1 flex-col gap-4 p-4 md:p-6">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold">Deals</h1>
+                        <h1 className="text-2xl font-bold">Opportunities</h1>
                         <p className="text-muted-foreground text-sm">Track sales opportunities from first touch to close.</p>
                     </div>
                     <div className="flex gap-2">
@@ -84,13 +85,13 @@ export default function DealsIndex({ deals, filters }: Props) {
                             </Link>
                         </Button>
                         <Button asChild size="sm">
-                            <Link href="/deals/create">+ New deal</Link>
+                            <Link href="/deals/create">+ New opportunity</Link>
                         </Button>
                     </div>
                 </div>
 
                 <form onSubmit={submit} className="flex max-w-sm gap-2">
-                    <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search deals…" className="h-9" />
+                    <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search opportunities…" className="h-9" />
                     <Button type="submit" variant="outline" size="sm">Search</Button>
                 </form>
 
@@ -100,7 +101,7 @@ export default function DealsIndex({ deals, filters }: Props) {
                     <table className="w-full text-sm">
                         <thead>
                             <tr className="bg-muted/50 border-b text-left">
-                                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Deal</th>
+                                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Opportunity</th>
                                 <th className="hidden px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground md:table-cell">Account</th>
                                 <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Stage</th>
                                 <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Value</th>
@@ -112,7 +113,7 @@ export default function DealsIndex({ deals, filters }: Props) {
                             {deals.data.length === 0 && (
                                 <tr>
                                     <td colSpan={6} className="text-muted-foreground px-4 py-12 text-center">
-                                        No deals found.
+                                        No opportunities found.
                                     </td>
                                 </tr>
                             )}
@@ -144,7 +145,7 @@ export default function DealsIndex({ deals, filters }: Props) {
                                         </div>
                                     </td>
                                     <td className="hidden px-4 py-3 lg:table-cell">
-                                        <span className="text-muted-foreground">{deal.expected_close_date ?? '—'}</span>
+                                        <span className="text-muted-foreground">{formatDate(deal.expected_close_date)}</span>
                                     </td>
                                     <td className="px-4 py-3">
                                         <TooltipProvider delayDuration={0}>
@@ -192,8 +193,8 @@ export default function DealsIndex({ deals, filters }: Props) {
                 onClose={() => setDeleting(null)}
                 onConfirm={confirmDelete}
                 title={`Delete ${deleting?.name}?`}
-                description="This deal will be permanently deleted and cannot be recovered."
-                confirmLabel="Delete deal"
+                description="This opportunity will be permanently deleted and cannot be recovered."
+                confirmLabel="Delete opportunity"
             />
         </AppLayout>
     );

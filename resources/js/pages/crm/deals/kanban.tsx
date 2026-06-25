@@ -16,7 +16,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { useRef, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Deals', href: '/deals' },
+    { title: 'Opportunities', href: '/deals' },
     { title: 'Kanban', href: '/deals/kanban' },
 ];
 
@@ -203,7 +203,7 @@ export default function DealsKanban({ columns: initialColumns, pipelineStages }:
                     <div>
                         <h1 className="text-2xl font-bold">Pipeline</h1>
                         <p className="text-muted-foreground text-sm">
-                            {allDeals.length} deals &middot; {money.format(columnTotal(allDeals))} total &middot;{' '}
+                            {allDeals.length} opportunities &middot; {money.format(columnTotal(allDeals))} total &middot;{' '}
                             {money.format(weightedTotal(allDeals))} weighted
                         </p>
                     </div>
@@ -212,7 +212,7 @@ export default function DealsKanban({ columns: initialColumns, pipelineStages }:
                             <Link href="/deals">List view</Link>
                         </Button>
                         <Button asChild size="sm">
-                            <Link href="/deals/create">+ New deal</Link>
+                            <Link href="/deals/create">+ New opportunity</Link>
                         </Button>
                     </div>
                 </div>

@@ -42,16 +42,37 @@ class Contact extends Model implements Auditable
 
     protected $fillable = [
         'owner_id',
+        'lead_owner',
         'account_id',
+        'industry_id',
+        'role_id',
+        'business_type_id',
+        'lead_source_id',
         'contact_import_batch_id',
         'first_name',
+        'salutation',
+        'middle_name',
         'last_name',
+        'suffix',
         'email',
         'phone',
+        'mobile',
+        'other_phone',
         'dialpad_contact_id',
         'job_title',
+        'role',
+        'title',
         'company_name',
+        'industry',
+        'business_type',
+        'linkedin',
+        'position_applied',
+        'last_company',
+        'gender_identity',
+        'lead_source',
+        'employee_size',
         'status',
+        'lead_status',
         'notes',
         'source_type',
         'pool_team',
@@ -63,6 +84,28 @@ class Contact extends Model implements Auditable
         'archived_at',
         'archive_reason',
         'archived_by',
+        // Address
+        'street',
+        'city',
+        'state_province',
+        'zip_postal_code',
+        'country',
+        // Lead-specific
+        'reason_not_qualified',
+        'estimated_value',
+        // NDIS/Service-related
+        'ndis_funding',
+        'client_with_complex_needs',
+        'sm_field_ndis_funding',
+        'ndis_accommodation',
+        'region_territory',
+        'are_you_in_the_area',
+        'are_you_in_merrylands',
+        'are_you_in_pacific_pines',
+        // Service Interests
+        'business_unit',
+        'services',
+        'service_description',
     ];
 
     protected $appends = [
@@ -75,6 +118,11 @@ class Contact extends Model implements Auditable
             'pool_assigned_at' => 'datetime',
             'pool_expires_at' => 'datetime',
             'archived_at' => 'datetime',
+            'client_with_complex_needs' => 'boolean',
+            'are_you_in_the_area' => 'boolean',
+            'are_you_in_merrylands' => 'boolean',
+            'are_you_in_pacific_pines' => 'boolean',
+            'estimated_value' => 'decimal:2',
         ];
     }
 
@@ -86,6 +134,26 @@ class Contact extends Model implements Auditable
     public function account(): BelongsTo
     {
         return $this->belongsTo(Account::class);
+    }
+
+    public function industry(): BelongsTo
+    {
+        return $this->belongsTo(Industry::class);
+    }
+
+    public function role(): BelongsTo
+    {
+        return $this->belongsTo(Role::class);
+    }
+
+    public function businessType(): BelongsTo
+    {
+        return $this->belongsTo(BusinessType::class);
+    }
+
+    public function leadSource(): BelongsTo
+    {
+        return $this->belongsTo(LeadSource::class);
     }
 
     public function deals(): HasMany
@@ -101,6 +169,11 @@ class Contact extends Model implements Auditable
     public function callLogs(): HasMany
     {
         return $this->hasMany(CallLog::class);
+    }
+
+    public function serviceInterests(): HasMany
+    {
+        return $this->hasMany(ServiceInterestContact::class);
     }
 
     public function poolAssignedTo(): BelongsTo

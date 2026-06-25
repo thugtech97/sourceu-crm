@@ -28,7 +28,7 @@ const mainNavItems: NavItem[] = [
         icon: Building2,
     },
     {
-        title: 'Deals',
+        title: 'Opportunities',
         url: '/deals',
         icon: Handshake,
     },

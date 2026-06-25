@@ -78,7 +78,7 @@ function dateValue(value: string | null) {
 
 export default function EditDeal({ deal, accounts, contacts }: Props) {
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Deals', href: '/deals' },
+        { title: 'Opportunities', href: '/deals' },
         { title: deal.name, href: `/deals/${deal.id}/edit` },
     ];
     const { data, setData, patch, processing, errors } = useForm<DealForm>({
@@ -114,11 +114,11 @@ export default function EditDeal({ deal, accounts, contacts }: Props) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Edit deal" />
+            <Head title="Edit opportunity" />
 
             <div className="max-w-3xl p-4">
                 <div className="mb-6">
-                    <h1 className="text-2xl font-semibold">Edit deal</h1>
+                    <h1 className="text-2xl font-semibold">Edit opportunity</h1>
                     <p className="text-muted-foreground text-sm">Update the opportunity details and forecast.</p>
                 </div>
 
@@ -126,7 +126,7 @@ export default function EditDeal({ deal, accounts, contacts }: Props) {
                     <DealFields accounts={accounts} contacts={contacts} data={data} setData={setData} errors={errors} />
 
                     <div className="flex gap-2">
-                        <Button disabled={processing}>Save deal</Button>
+                        <Button disabled={processing}>Save opportunity</Button>
                         <Button asChild variant="outline">
                             <Link href="/deals">Cancel</Link>
                         </Button>
@@ -194,7 +194,7 @@ function DealFields({
         <>
             <div className="grid gap-4 md:grid-cols-2">
                 <div className="grid gap-2 md:col-span-2">
-                    <Label htmlFor="name">Deal name</Label>
+                    <Label htmlFor="name">Opportunity name</Label>
                     <Input id="name" value={data.name} onChange={(event) => setData('name', event.target.value)} required />
                     <InputError message={errors.name} />
                 </div>

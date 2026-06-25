@@ -8,7 +8,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-test('can convert lead with company_name to opportunity without providing account_name', function () {
+test('setting opportunity disposition on lead with company_name redirects back with open_convert_wizard session key', function () {
     $rep = User::factory()->create(['is_approved' => true]);
     $contact = Contact::factory()->create([
         'company_name' => 'Tech Corp',
@@ -18,40 +18,17 @@ test('can convert lead with company_name to opportunity without providing accoun
 
     $response = $this->actingAs($rep)->patch(route('leads.pool.disposition', ['contact' => $contact->id]), [
         'disposition' => Contact::DISPOSITION_OPPORTUNITY,
-        'account_name' => '', // Not required when company_name exists
     ]);
 
     $response->assertRedirect();
+    $response->assertSessionHas('open_convert_wizard', $contact->id);
 
     $contact->refresh();
-    expect($contact->disposition)->toBe(Contact::DISPOSITION_OPPORTUNITY);
-    expect($contact->account_id)->not->toBeNull();
-
-    $deal = Deal::where('contact_id', $contact->id)->first();
-    expect($deal)->not->toBeNull();
-    expect($deal->expected_close_date->toDateString())->toBe(today()->toDateString());
+    // Disposition is not changed to opportunity yet (that's done after wizard conversion)
+    expect($contact->disposition)->toBe(Contact::DISPOSITION_NEW_LEAD);
 });
 
-test('lead converted to opportunity creates account from company_name', function () {
-    $rep = User::factory()->create(['is_approved' => true]);
-    $contact = Contact::factory()->create([
-        'company_name' => 'Innovation Inc',
-        'pool_assigned_to' => $rep->id,
-        'disposition' => Contact::DISPOSITION_NEW_LEAD,
-    ]);
-
-    $response = $this->actingAs($rep)->patch(route('leads.pool.disposition', ['contact' => $contact->id]), [
-        'disposition' => Contact::DISPOSITION_OPPORTUNITY,
-    ]);
-
-    $response->assertRedirect();
-
-    $account = Account::where('name', 'Innovation Inc')->first();
-    expect($account)->not->toBeNull();
-    expect($account->owner_id)->toBe($rep->id);
-});
-
-test('lead without company_name cannot be converted to opportunity', function () {
+test('lead without company_name cannot set opportunity disposition', function () {
     $rep = User::factory()->create(['is_approved' => true]);
     $contact = Contact::factory()->create([
         'company_name' => null,
@@ -63,9 +40,9 @@ test('lead without company_name cannot be converted to opportunity', function ()
         'disposition' => Contact::DISPOSITION_OPPORTUNITY,
     ]);
 
-    // Should fail - no company_name to create account from
-    $response->assertSessionHasErrors();
-    
+    // Should fail - no company_name
+    $response->assertSessionHasErrors('company_name');
+
     $contact->refresh();
     expect($contact->disposition)->toBe(Contact::DISPOSITION_NEW_LEAD);
 });

@@ -27,6 +27,7 @@ export interface SharedData {
     quote: { message: string; author: string };
     flash: {
         status?: string;
+        open_convert_wizard?: number;
     };
     auth: Auth;
     notifications: {
