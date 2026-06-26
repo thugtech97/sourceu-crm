@@ -97,9 +97,9 @@ export default function AccountsIndex({ accounts, filters }: Props) {
                                     </tr>
                                 )}
                                 {accounts.data.map((account) => (
-                                    <tr key={account.id}>
+                                    <tr key={account.id} className="cursor-pointer hover:bg-muted/30 transition-colors" onClick={() => router.visit(`/accounts/${account.id}`)}>
                                         <td className="px-4 py-3">
-                                            <Link href={`/accounts/${account.id}/edit`} className="font-medium hover:underline">
+                                            <Link href={`/accounts/${account.id}`} className="font-medium hover:underline" onClick={(e) => e.stopPropagation()}>
                                                 {account.name}
                                             </Link>
                                             {account.website && <p className="text-muted-foreground text-xs">{account.website}</p>}
@@ -113,7 +113,7 @@ export default function AccountsIndex({ accounts, filters }: Props) {
                                                 <div className="flex justify-end gap-1">
                                                     <Tooltip>
                                                         <TooltipTrigger asChild>
-                                                            <Button variant="ghost" size="sm" asChild>
+                                                            <Button variant="ghost" size="sm" asChild onClick={(e) => e.stopPropagation()}>
                                                                 <Link href={`/accounts/${account.id}/edit`}>
                                                                     <Pencil className="size-4" />
                                                                 </Link>
@@ -123,7 +123,7 @@ export default function AccountsIndex({ accounts, filters }: Props) {
                                                     </Tooltip>
                                                     <Tooltip>
                                                         <TooltipTrigger asChild>
-                                                            <Button variant="ghost" size="sm" onClick={() => setDeleting(account)}>
+                                                            <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setDeleting(account); }}>
                                                                 <Trash2 className="size-4" />
                                                             </Button>
                                                         </TooltipTrigger>

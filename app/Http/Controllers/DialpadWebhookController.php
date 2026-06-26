@@ -3,11 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\CallLog;
-use App\Models\Contact;
 use App\Models\DialpadWebhookLog;
-use App\Models\User;
 use App\Services\DialpadService;
-use App\Services\LeadRoutingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -15,7 +12,6 @@ use Illuminate\Support\Facades\Log;
 class DialpadWebhookController extends Controller
 {
     public function __construct(
-        private readonly LeadRoutingService $router,
         private readonly DialpadService $dialpad,
     ) {}
 
@@ -66,11 +62,6 @@ class DialpadWebhookController extends Controller
         };
     }
 
-    /**
-     * Atomic first-dial claim: the moment a rep initiates a call, the lead
-     * is claimed for them. Uses a WHERE pool_assigned_to IS NULL guard to
-     * prevent two reps claiming the same lead simultaneously.
-     */
     private function onCallInitiated(array $payload, string $callId): void
     {
         $callLog = CallLog::where('dialpad_call_id', $callId)->first();
@@ -80,16 +71,6 @@ class DialpadWebhookController extends Controller
         }
 
         $callLog->update(['status' => 'initiated', 'dialpad_payload' => $payload]);
-
-        // Auto-claim if the contact is in a pool and unclaimed.
-        if ($callLog->contact_id && $callLog->user_id) {
-            $contact = Contact::find($callLog->contact_id);
-            $rep = User::find($callLog->user_id);
-
-            if ($contact && $rep && $contact->isInPool()) {
-                $this->router->claim($contact, $rep);
-            }
-        }
     }
 
     private function onCallConnected(array $payload, string $callId): void
@@ -123,10 +104,6 @@ class DialpadWebhookController extends Controller
         ]);
     }
 
-    /**
-     * Missed calls do NOT start the 72h timer and do NOT claim the lead.
-     * The lead stays in the pool for another rep to try.
-     */
     private function onCallMissed(array $payload, string $callId): void
     {
         $callLog = CallLog::where('dialpad_call_id', $callId)->first();
@@ -140,17 +117,6 @@ class DialpadWebhookController extends Controller
             'ended_at' => now(),
             'dialpad_payload' => array_merge($callLog->dialpad_payload ?? [], $payload),
         ]);
-
-        // Release any claim that was made on initiation so the lead returns to the pool.
-        if ($callLog->contact_id) {
-            Contact::where('id', $callLog->contact_id)
-                ->where('pool_assigned_to', $callLog->user_id)
-                ->update([
-                    'pool_assigned_to' => null,
-                    'pool_assigned_at' => null,
-                    'pool_expires_at' => null,
-                ]);
-        }
     }
 
     private function onRecordingReady(array $payload, string $callId): void

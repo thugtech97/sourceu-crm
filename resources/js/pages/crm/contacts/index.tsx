@@ -121,14 +121,14 @@ export default function ContactsIndex({ contacts, filters }: Props) {
                             {contacts.data.map((contact) => {
                                 const statusStyle = STATUS_STYLES[contact.status] ?? STATUS_STYLES.inactive;
                                 return (
-                                    <tr key={contact.id} className="hover:bg-muted/30 transition-colors">
+                                    <tr key={contact.id} className="hover:bg-muted/30 cursor-pointer transition-colors" onClick={() => router.visit(`/contacts/${contact.id}`)}>
                                         <td className="px-4 py-3">
                                             <div className="flex items-center gap-3">
                                                 <div className="bg-primary/10 text-primary flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold">
                                                     {initials(contact.name)}
                                                 </div>
                                                 <div className="min-w-0">
-                                                    <Link href={`/contacts/${contact.id}/edit`} className="font-medium hover:underline">
+                                                    <Link href={`/contacts/${contact.id}`} className="font-medium hover:underline" onClick={(e) => e.stopPropagation()}>
                                                         {contact.name}
                                                     </Link>
                                                     {contact.job_title && (
@@ -169,7 +169,7 @@ export default function ContactsIndex({ contacts, filters }: Props) {
                                                     {contact.phone && (
                                                         <Tooltip>
                                                             <TooltipTrigger asChild>
-                                                                <Button variant="ghost" size="sm" disabled={dialingContactId === contact.id} onClick={() => dial(contact)}>
+                                                                <Button variant="ghost" size="sm" disabled={dialingContactId === contact.id} onClick={(e) => { e.stopPropagation(); dial(contact); }}>
                                                                     {dialingContactId === contact.id
                                                                         ? <LoaderCircle className="size-4 animate-spin" />
                                                                         : <Phone className="size-4" />}
@@ -180,7 +180,7 @@ export default function ContactsIndex({ contacts, filters }: Props) {
                                                     )}
                                                     <Tooltip>
                                                         <TooltipTrigger asChild>
-                                                            <Button variant="ghost" size="sm" asChild>
+                                                            <Button variant="ghost" size="sm" asChild onClick={(e) => e.stopPropagation()}>
                                                                 <Link href={`/contacts/${contact.id}/edit`}>
                                                                     <Pencil className="size-4" />
                                                                 </Link>
@@ -190,7 +190,7 @@ export default function ContactsIndex({ contacts, filters }: Props) {
                                                     </Tooltip>
                                                     <Tooltip>
                                                         <TooltipTrigger asChild>
-                                                            <Button variant="ghost" size="sm" onClick={() => setDeleting(contact)}>
+                                                            <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setDeleting(contact); }}>
                                                                 <Trash2 className="size-4" />
                                                             </Button>
                                                         </TooltipTrigger>

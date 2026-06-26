@@ -87,6 +87,19 @@ class DealController extends Controller
         return back();
     }
 
+    public function show(Deal $deal): Response
+    {
+        $deal->load([
+            'contact:id,first_name,last_name,email,phone,job_title',
+            'account:id,name,industry,website',
+            'activities' => fn ($q) => $q->latest()->limit(10),
+        ]);
+
+        return Inertia::render('crm/deals/show', [
+            'deal' => $deal,
+        ]);
+    }
+
     public function create(Request $request): Response
     {
         return Inertia::render('crm/deals/create', $this->formOptions());

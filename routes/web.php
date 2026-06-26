@@ -15,8 +15,8 @@ use App\Http\Controllers\DialpadTestController;
 use App\Http\Controllers\DialpadWebhookController;
 use App\Http\Controllers\DncListController;
 use App\Http\Controllers\IndustryController;
+use App\Http\Controllers\LeadController;
 use App\Http\Controllers\LeadImportController;
-use App\Http\Controllers\LeadPoolController;
 use App\Http\Controllers\LeadSourceController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RoleController;
@@ -47,7 +47,7 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
 
     Route::get('crm', CrmDashboardController::class)->name('crm.dashboard');
     Route::get('accounts/search', [AccountController::class, 'search'])->name('accounts.search');
-    Route::resource('accounts', AccountController::class)->except(['show']);
+    Route::resource('accounts', AccountController::class);
     Route::get('industries/search', [IndustryController::class, 'search'])->name('industries.search');
     Route::post('industries', [IndustryController::class, 'store'])->name('industries.store');
     Route::get('roles/search', [RoleController::class, 'search'])->name('roles.search');
@@ -85,6 +85,7 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     Route::get('contacts/import/{batch}/status', [ContactImportController::class, 'getStatus'])->name('contacts.import.get-status');
     Route::get('contacts/import/{batch}/download-errors', [ContactImportController::class, 'downloadErrorLog'])->name('contacts.import.download-errors');
     Route::get('contacts/import/{batch}', [ContactImportController::class, 'status'])->name('contacts.import.status');
+    Route::get('contacts/{contact}', [ContactController::class, 'show'])->name('contacts.show');
 
     Route::post('dialpad/connect', [DialpadController::class, 'connect'])->name('dialpad.connect');
     Route::post('dialpad/test-lookup', [DialpadController::class, 'testLookup'])->name('dialpad.test-lookup');
@@ -109,24 +110,13 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     Route::patch('deals/{deal}/stage', [DealController::class, 'updateStage'])->name('deals.stage');
     Route::patch('deals/{deal}/meeting-outcome', [DealController::class, 'logMeetingOutcome'])->name('deals.meeting-outcome');
     Route::resource('deals', DealController::class)->except(['show']);
+    Route::get('deals/{deal}', [DealController::class, 'show'])->name('deals.show');
     Route::patch('notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::patch('notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
 
     Route::get('dnc', [DncListController::class, 'index'])->name('dnc.index');
     Route::post('dnc', [DncListController::class, 'store'])->name('dnc.store');
     Route::delete('dnc/{dnc}', [DncListController::class, 'destroy'])->name('dnc.destroy');
-
-    Route::get('leads/pool', [LeadPoolController::class, 'index'])->name('leads.pool.index');
-    Route::post('leads/pool/bulk-claim', [LeadPoolController::class, 'bulkClaim'])->name('leads.pool.bulk-claim');
-    Route::post('leads/pool/add', [LeadPoolController::class, 'addManually'])->name('leads.pool.add');
-    Route::put('leads/pool/{contact}/edit', [LeadPoolController::class, 'edit'])->name('leads.pool.edit');
-    Route::post('leads/pool/{contact}/claim', [LeadPoolController::class, 'claim'])->name('leads.pool.claim');
-    Route::patch('leads/pool/{contact}/disposition', [LeadPoolController::class, 'setDisposition'])->name('leads.pool.disposition');
-    Route::patch('leads/pool/{contact}/release', [LeadPoolController::class, 'release'])->name('leads.pool.release');
-    Route::patch('leads/pool/{contact}/archive', [LeadPoolController::class, 'archive'])->name('leads.pool.archive');
-    Route::patch('leads/pool/{contact}/restore', [LeadPoolController::class, 'restore'])->name('leads.pool.restore');
-    Route::get('leads/pool/{contact}/conversion-data', [LeadPoolController::class, 'conversionData'])->name('leads.pool.conversion-data');
-    Route::post('leads/pool/{contact}/convert', [LeadPoolController::class, 'convertFromWizard'])->name('leads.pool.convert');
 
     // Lead import routes
     Route::get('leads/import', [LeadImportController::class, 'index'])->name('leads.import.index');
@@ -139,6 +129,13 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     Route::get('leads/import/{batch}/status', [LeadImportController::class, 'getStatus'])->name('leads.import.get-status');
     Route::get('leads/import/{batch}/download-errors', [LeadImportController::class, 'downloadErrorLog'])->name('leads.import.download-errors');
     Route::get('leads/import/{batch}', [LeadImportController::class, 'status'])->name('leads.import.status');
+
+    // Lead actions — must be before the resource route
+    Route::post('leads/{lead}/convert', [LeadController::class, 'convert'])->name('leads.convert');
+    Route::post('leads/{lead}/disqualify', [LeadController::class, 'disqualify'])->name('leads.disqualify');
+
+    // Spec-compliant Lead CRUD — pool/import routes above take precedence for their specific paths
+    Route::resource('leads', LeadController::class);
 });
 
 // Admin panel — approved admins only.

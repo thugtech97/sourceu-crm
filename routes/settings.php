@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\LeadFieldController;
 use App\Http\Controllers\Settings\PasswordController;
 use App\Http\Controllers\Settings\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -22,4 +23,10 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     Route::get('settings/integrations', function () {
         return Inertia::render('settings/integrations');
     })->name('integrations');
+
+    Route::get('settings/lead-fields', [LeadFieldController::class, 'index'])->name('lead-fields.index');
+    Route::post('settings/lead-fields', [LeadFieldController::class, 'store'])->name('lead-fields.store');
+    Route::patch('settings/lead-fields/{leadField}', [LeadFieldController::class, 'update'])->name('lead-fields.update');
+    Route::delete('settings/lead-fields/{leadField}', [LeadFieldController::class, 'destroy'])->name('lead-fields.destroy');
+    Route::post('settings/lead-fields/reorder', [LeadFieldController::class, 'reorder'])->name('lead-fields.reorder');
 });

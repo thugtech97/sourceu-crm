@@ -94,7 +94,6 @@ class ContactImportController extends Controller
                 ['value' => 'job_title', 'label' => 'Job Title'],
                 ['value' => 'company_name', 'label' => 'Company Name'],
                 ['value' => 'status', 'label' => 'Status'],
-                ['value' => 'pool_team', 'label' => 'Pool Team'],
                 ['value' => 'notes', 'label' => 'Notes'],
                 ['value' => 'source_type', 'label' => 'Source Type'],
                 ['value' => 'account_id', 'label' => 'Account ID'],
@@ -205,12 +204,11 @@ class ContactImportController extends Controller
             'status',
             'notes',
             'source_type',
-            'pool_team',
         ];
 
         $sampleData = [
-            ['John', 'Doe', 'john@example.com', '+639171234567', 'Manager', 'Tech Corp', 'lead', 'Sample note', 'inbound', 'sales'],
-            ['Jane', 'Smith', 'jane@example.com', '+639181234567', 'Owner', 'Innovation Inc', 'prospect', 'Sample note', 'cold', 'cold_calling'],
+            ['John', 'Doe', 'john@example.com', '+639171234567', 'Manager', 'Tech Corp', 'lead', 'Sample note', 'inbound'],
+            ['Jane', 'Smith', 'jane@example.com', '+639181234567', 'Owner', 'Innovation Inc', 'prospect', 'Sample note', 'cold'],
         ];
 
         return response()->streamDownload(function () use ($headers, $sampleData) {
@@ -242,7 +240,6 @@ class ContactImportController extends Controller
             'status',
             'notes',
             'source_type',
-            'pool_team',
         ];
 
         // Add headers
@@ -253,8 +250,8 @@ class ContactImportController extends Controller
 
         // Add sample data
         $sampleData = [
-            ['John', 'Doe', 'john@example.com', '+639171234567', 'Manager', 'Tech Corp', 'lead', 'Sample note', 'inbound', 'sales'],
-            ['Jane', 'Smith', 'jane@example.com', '+639181234567', 'Owner', 'Innovation Inc', 'prospect', 'Sample note', 'cold', 'cold_calling'],
+            ['John', 'Doe', 'john@example.com', '+639171234567', 'Manager', 'Tech Corp', 'lead', 'Sample note', 'inbound'],
+            ['Jane', 'Smith', 'jane@example.com', '+639181234567', 'Owner', 'Innovation Inc', 'prospect', 'Sample note', 'cold'],
         ];
 
         foreach ($sampleData as $rowIndex => $row) {

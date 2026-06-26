@@ -118,9 +118,9 @@ export default function DealsIndex({ deals, filters }: Props) {
                                 </tr>
                             )}
                             {deals.data.map((deal) => (
-                                <tr key={deal.id} className="hover:bg-muted/30 transition-colors">
+                                <tr key={deal.id} className="cursor-pointer hover:bg-muted/30 transition-colors" onClick={() => router.visit(`/deals/${deal.id}`)}>
                                     <td className="px-4 py-3">
-                                        <Link href={`/deals/${deal.id}/edit`} className="font-medium hover:underline">
+                                        <Link href={`/deals/${deal.id}`} className="font-medium hover:underline" onClick={(e) => e.stopPropagation()}>
                                             {deal.name}
                                         </Link>
                                         {deal.contact?.name && (
@@ -152,7 +152,7 @@ export default function DealsIndex({ deals, filters }: Props) {
                                             <div className="flex justify-end gap-1">
                                                 <Tooltip>
                                                     <TooltipTrigger asChild>
-                                                        <Button variant="ghost" size="sm" asChild>
+                                                        <Button variant="ghost" size="sm" asChild onClick={(e) => e.stopPropagation()}>
                                                             <Link href={`/deals/${deal.id}/edit`}>
                                                                 <Pencil className="size-4" />
                                                             </Link>
@@ -162,7 +162,7 @@ export default function DealsIndex({ deals, filters }: Props) {
                                                 </Tooltip>
                                                 <Tooltip>
                                                     <TooltipTrigger asChild>
-                                                        <Button variant="ghost" size="sm" onClick={() => setDeleting(deal)}>
+                                                        <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setDeleting(deal); }}>
                                                             <Trash2 className="size-4" />
                                                         </Button>
                                                     </TooltipTrigger>
