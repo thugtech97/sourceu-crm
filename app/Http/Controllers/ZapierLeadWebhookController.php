@@ -6,7 +6,6 @@ use App\Models\Activity;
 use App\Models\Contact;
 use App\Models\DncList;
 use App\Models\User;
-use App\Services\LeadRoutingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -14,7 +13,7 @@ use Illuminate\Support\Str;
 
 class ZapierLeadWebhookController extends Controller
 {
-    public function __invoke(Request $request, LeadRoutingService $router): JsonResponse
+    public function __invoke(Request $request): JsonResponse
     {
         $secret = config('services.zapier.lead_webhook_secret');
 
@@ -56,9 +55,6 @@ class ZapierLeadWebhookController extends Controller
             'notes' => $this->leadNotes($lead, $payload),
         ]);
         $contact->save();
-
-        // Route contact into the appropriate pool.
-        $router->ingest($contact, $sourceType);
 
         Activity::create([
             'owner_id' => $owner->id,

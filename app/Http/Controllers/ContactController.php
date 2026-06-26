@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Account;
 use App\Models\CallLog;
 use App\Models\Contact;
-use App\Services\LeadRoutingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -39,6 +38,21 @@ class ContactController extends Controller
         ]);
     }
 
+    public function show(Contact $contact): Response
+    {
+        $contact->load([
+            'account:id,name,industry,website',
+            'deals' => fn ($q) => $q->latest()->limit(10)
+                ->select('id', 'contact_id', 'account_id', 'name', 'stage', 'value', 'expected_close_date', 'probability'),
+            'callLogs' => fn ($q) => $q->latest('started_at')->limit(5)
+                ->select('id', 'contact_id', 'direction', 'status', 'duration_seconds', 'started_at'),
+        ]);
+
+        return Inertia::render('crm/contacts/show', [
+            'contact' => $contact,
+        ]);
+    }
+
     public function create(Request $request): Response
     {
         return Inertia::render('crm/contacts/create', [
@@ -46,7 +60,7 @@ class ContactController extends Controller
         ]);
     }
 
-    public function store(Request $request, LeadRoutingService $router): RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
         $data = $this->validated($request);
 
@@ -58,15 +72,11 @@ class ContactController extends Controller
             }
         }
 
-        $contact = Contact::create([
+        Contact::create([
             ...$data,
             'owner_id' => $request->user()->id,
             'disposition' => Contact::DISPOSITION_OPPORTUNITY,
         ]);
-
-        if ($data['status'] === 'lead') {
-            $router->ingest($contact, $data['source_type'] ?? Contact::SOURCE_INBOUND);
-        }
 
         return to_route('contacts.index')->with('status', 'Contact created.');
     }

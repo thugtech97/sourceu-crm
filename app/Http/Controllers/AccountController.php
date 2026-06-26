@@ -43,6 +43,19 @@ class AccountController extends Controller
         ]);
     }
 
+    public function show(Account $account): Response
+    {
+        $account->load([
+            'contacts:id,account_id,first_name,last_name,email,phone,job_title,status',
+            'deals' => fn ($q) => $q->latest()
+                ->select('id', 'account_id', 'contact_id', 'name', 'stage', 'value', 'expected_close_date', 'probability'),
+        ]);
+
+        return Inertia::render('crm/accounts/show', [
+            'account' => $account,
+        ]);
+    }
+
     public function create(): Response
     {
         return Inertia::render('crm/accounts/create');

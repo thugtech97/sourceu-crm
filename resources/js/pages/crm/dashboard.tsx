@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/react';
-import { ArrowRight, BriefcaseBusiness, Building2, DollarSign, Handshake, Mail, Phone, PhoneIncoming, Users } from 'lucide-react';
+import { ArrowRight, BriefcaseBusiness, Building2, DollarSign, Handshake, Phone, Users } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/crm' }];
 
@@ -34,7 +34,7 @@ type CallLog = {
 type Props = {
     stats: {
         accounts: number; contacts: number; openDeals: number;
-        pipelineValue: number; wonValue: number; poolLeads: number; warmEmail: number;
+        pipelineValue: number; wonValue: number;
     };
     dealsByStage: DealByStage[];
     recentContacts: Contact[];
@@ -90,8 +90,6 @@ export default function CrmDashboard({ stats, dealsByStage, recentContacts, rece
         { label: 'Pipeline value', value: money.format(stats.pipelineValue), icon: BriefcaseBusiness, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-950' },
         { label: 'Won', value: money.format(stats.wonValue), icon: DollarSign, color: 'text-green-600', bg: 'bg-green-50 dark:bg-green-950' },
         { label: 'Open opportunities', value: stats.openDeals.toLocaleString(), icon: Handshake, color: 'text-purple-600', bg: 'bg-purple-50 dark:bg-purple-950' },
-        { label: 'Pool leads', value: stats.poolLeads.toLocaleString(), icon: PhoneIncoming, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-950' },
-        { label: 'Warm email', value: stats.warmEmail.toLocaleString(), icon: Mail, color: 'text-orange-600', bg: 'bg-orange-50 dark:bg-orange-950' },
         { label: 'Contacts', value: stats.contacts.toLocaleString(), icon: Users, color: 'text-slate-600', bg: 'bg-slate-50 dark:bg-slate-800' },
         { label: 'Accounts', value: stats.accounts.toLocaleString(), icon: Building2, color: 'text-slate-600', bg: 'bg-slate-50 dark:bg-slate-800' },
     ];

@@ -120,13 +120,6 @@ class ProcessContactImport implements ShouldQueue
             throw new \Exception('Invalid status value.');
         }
 
-        // Validate pool_team if provided
-        if (! empty($data['pool_team'])) {
-            if (! in_array($data['pool_team'], [Contact::TEAM_SALES, Contact::TEAM_COLD_CALLING])) {
-                throw new \Exception('Invalid pool_team value. Must be "sales" or "cold_calling".');
-            }
-        }
-
         // Validate source_type - default to 'import'
         $data['source_type'] = 'import';
 
@@ -149,7 +142,6 @@ class ProcessContactImport implements ShouldQueue
             'job_title' => ! empty($data['job_title']) ? trim($data['job_title']) : null,
             'company_name' => ! empty($data['company_name']) ? trim($data['company_name']) : null,
             'status' => $data['status'],
-            'pool_team' => ! empty($data['pool_team']) ? trim($data['pool_team']) : null,
             'notes' => ! empty($data['notes']) ? trim($data['notes']) : null,
             'source_type' => $data['source_type'],
             'account_id' => ! empty($data['account_id']) ? $data['account_id'] : null,
@@ -236,8 +228,6 @@ class ProcessContactImport implements ShouldQueue
             return 'Invalid email format';
         } elseif (str_contains($message, 'status')) {
             return 'Invalid status value';
-        } elseif (str_contains($message, 'pool_team')) {
-            return 'Invalid pool team value';
         } elseif (str_contains($message, 'source_type')) {
             return 'Invalid source type';
         } elseif (str_contains($message, 'Account ID')) {

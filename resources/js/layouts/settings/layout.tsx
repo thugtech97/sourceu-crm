@@ -26,6 +26,11 @@ const sidebarNavItems: NavItem[] = [
         url: '/settings/integrations',
         icon: null,
     },
+    {
+        title: 'Lead Fields',
+        url: '/settings/lead-fields',
+        icon: null,
+    },
 ];
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
